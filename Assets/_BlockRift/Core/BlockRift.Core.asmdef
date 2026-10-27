@@ -1,0 +1,6 @@
+{
+  "name": "BlockRift.Core",
+  "rootNamespace": "BlockRift.Core",
+  "references": [],
+  "noEngineReferences": true
+}

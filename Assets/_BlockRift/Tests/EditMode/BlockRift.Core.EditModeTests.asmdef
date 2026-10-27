@@ -1,0 +1,7 @@
+{
+  "name": "BlockRift.Core.EditModeTests",
+  "rootNamespace": "BlockRift.Tests",
+  "references": ["BlockRift.Core"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

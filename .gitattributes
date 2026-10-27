@@ -1,0 +1,25 @@
+* text=auto
+*.cs text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.unity text eol=lf
+*.prefab text eol=lf
+*.mat text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+*.asmdef text eol=lf
+*.inputactions text eol=lf
+*.shader text eol=lf
+*.hlsl text eol=lf
+
+# Binary art source and exported models are versioned through Git LFS.
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.FBX filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.zip binary

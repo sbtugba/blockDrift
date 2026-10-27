@@ -1,0 +1,119 @@
+{
+    "commonScale": 0.5256578326225281,
+    "models": [
+        {
+            "path": "Assets/_BlockRift/Art/Models/1x1.fbx",
+            "rootScale": "(100.00000, 100.00000, 100.00000)",
+            "rootRotation": "(270.000, 0.000, 0.000)",
+            "originalMaterials": "Material.001 / Universal Render Pipeline/Lit",
+            "importedSize": {
+                "x": 1.9023782014846802,
+                "y": 0.5483109354972839,
+                "z": 1.673280119895935
+            },
+            "importedCenter": {
+                "x": 0.0006021000444889069,
+                "y": 0.0034018773585557939,
+                "z": -0.0005642888136208057
+            },
+            "previewSize": {
+                "x": 1.0,
+                "y": 0.2882239520549774,
+                "z": 0.8795728087425232
+            },
+            "renderers": 1,
+            "meshes": 1,
+            "vertices": 45355,
+            "triangles": 90706,
+            "missingNormals": 0,
+            "missingUV": 1,
+            "degenerateTriangles": 0
+        },
+        {
+            "path": "Assets/_BlockRift/Art/Models/2x2.fbx",
+            "rootScale": "(100.00000, 100.00000, 100.00000)",
+            "rootRotation": "(270.000, 0.000, 0.000)",
+            "originalMaterials": "Material.001 / Universal Render Pipeline/Lit",
+            "importedSize": {
+                "x": 1.9023686647415162,
+                "y": 0.41942134499549868,
+                "z": 1.9023820161819459
+            },
+            "importedCenter": {
+                "x": 0.0005849637091159821,
+                "y": 0.0005019479431211948,
+                "z": -0.0005913900095038116
+            },
+            "previewSize": {
+                "x": 0.9999949932098389,
+                "y": 0.22047211229801179,
+                "z": 1.0000020265579224
+            },
+            "renderers": 1,
+            "meshes": 1,
+            "vertices": 60831,
+            "triangles": 121658,
+            "missingNormals": 0,
+            "missingUV": 1,
+            "degenerateTriangles": 0
+        },
+        {
+            "path": "Assets/_BlockRift/Art/Models/3x1.fbx",
+            "rootScale": "(100.00000, 100.00000, 100.00000)",
+            "rootRotation": "(270.000, 0.000, 0.000)",
+            "originalMaterials": "Lit / Universal Render Pipeline/Lit",
+            "importedSize": {
+                "x": 1.8996330499649048,
+                "y": 0.3388415575027466,
+                "z": 0.7242771983146668
+            },
+            "importedCenter": {
+                "x": 0.000975094735622406,
+                "y": -0.00098157930187881,
+                "z": -0.0007980270311236382
+            },
+            "previewSize": {
+                "x": 0.9985569715499878,
+                "y": 0.17811471223831178,
+                "z": 0.3807219862937927
+            },
+            "renderers": 1,
+            "meshes": 1,
+            "vertices": 158229,
+            "triangles": 99418,
+            "missingNormals": 0,
+            "missingUV": 1,
+            "degenerateTriangles": 0
+        },
+        {
+            "path": "Assets/_BlockRift/Art/Models/4x1.fbx",
+            "rootScale": "(100.00000, 100.00000, 100.00000)",
+            "rootRotation": "(270.000, 0.000, 0.000)",
+            "originalMaterials": "Lit / Universal Render Pipeline/Lit",
+            "importedSize": {
+                "x": 1.8996917009353638,
+                "y": 0.25826531648635867,
+                "z": 0.619859516620636
+            },
+            "importedCenter": {
+                "x": 0.0009428244084119797,
+                "y": -0.001119351014494896,
+                "z": -0.0009596231975592673
+            },
+            "previewSize": {
+                "x": 0.9985878467559815,
+                "y": 0.13575918972492219,
+                "z": 0.3258340060710907
+            },
+            "renderers": 1,
+            "meshes": 1,
+            "vertices": 168188,
+            "triangles": 101030,
+            "missingNormals": 0,
+            "missingUV": 1,
+            "degenerateTriangles": 0
+        }
+    ],
+    "reopened": true,
+    "graphics": "NVIDIA GeForce MX450"
+}

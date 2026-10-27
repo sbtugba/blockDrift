@@ -1,0 +1,85 @@
+# Unity regenerates these machine-local folders.
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Bb]uild/
+/[Bb]uilds/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/TestResults/
+
+# IDE and generated solution/project files.
+/.vs/
+/.idea/
+/.vscode/
+/.vsconfig
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.tmp
+*.log
+*.stackdump
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local agent state is private; project instructions in .agents/ are tracked.
+/.codex/
+/.claude/
+/.cache/
+
+# Credentials, local environment files, signing certificates and keys.
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.json
+credentials.*.json
+service-account*.json
+service_account*.json
+secrets.json
+secrets.*
+auth.json
+id_rsa*
+id_ed25519*
+google-services.json
+GoogleService-Info.plist
+/Packages/.npmrc
+
+# Blender autosaves and historical production backups stay on this computer.
+*.blend[0-9]*
+*.blend@
+/ArtProduction/**/*_Before*.blend
+/ArtProduction/**/Before*.blend
+/ArtProduction/**/Backup*.blend
+/ArtProduction/RemovedAssets/
+/ArtProduction/Diagnostics/
+/ArtProduction/Obstacle_1x1_Stone/Revision02/
+
+# Render output and machine-specific audit data are reproducible, not source.
+/ArtProduction/**/*.png
+!/ArtProduction/Obstacle_1x1_Stone/Final/Stone_1x1_Surface.png
+!/ArtProduction/Obstacle_1x1_Stone/Final/Stone_1x1_Normal.png
+/ArtProduction/**/*.json
+/ArtProduction/**/*.fbx
+/docs/*_AUDIT.json
+/docs/*_VALIDATION.json
+
+# Keep Unity asset metadata. Never add a blanket '*.meta' ignore rule.

@@ -1,0 +1,232 @@
+import bpy, bmesh, math, os, json, hashlib
+from mathutils import Vector
+from mathutils.geometry import delaunay_2d_cdt
+# Proje kökü script dosyasından veya açık Blender dosyasından bulunur; kullanıcıya özel yol saklanmaz.
+import os
+from pathlib import Path
+_PROJECT_ROOT = next((p for p in Path(globals().get("__file__", bpy.data.filepath or os.getcwd())).resolve().parents
+                      if (p / "AGENTS.md").is_file()), None)
+if _PROJECT_ROOT is None:
+    raise RuntimeError("Scripti Block Rift proje klasöründen veya proje içindeki Blender dosyasından çalıştırın.")
+OUT=str(_PROJECT_ROOT / 'ArtProduction/Block_4x1')
+MASTER=str(_PROJECT_ROOT / 'ArtProduction/Block_1x1_Final/Block_1x1_Final.blend')
+os.makedirs(OUT,exist_ok=True)
+family_scene=bpy.context.scene
+master=bpy.data.objects.get("Block_1x1_Export") or bpy.data.objects.get("Block_1x1")
+protected=list(family_scene.objects)
+def signature(o):
+    result={"data":o.data.as_pointer() if o.data else None,"matrix":[list(r) for r in o.matrix_world],"collections":[c.name for c in o.users_collection],"hide":(o.hide_viewport,o.hide_render)}
+    if o.type=="MESH":
+        data=o.data
+        result["mesh"]=hashlib.sha256(str(([tuple(v.co) for v in data.vertices],[(tuple(p.vertices),p.material_index,p.use_smooth) for p in data.polygons],[tuple(n.vector) for n in data.corner_normals],[[tuple(d.uv) for d in uv.data] for uv in data.uv_layers])).encode()).hexdigest()
+        result["materials"]=[m.as_pointer() for m in data.materials]
+    if o.type=="LIGHT":result["light"]=(o.data.energy,tuple(o.data.color),o.data.type)
+    if o.type=="CAMERA":result["camera"]=(o.data.type,o.data.lens,o.data.ortho_scale)
+    return result
+protected_before={o.name:signature(o) for o in protected}
+reference3=family_scene.objects.get("Block_3x1")
+assert reference3 and len(reference3.data.vertices)==6538,"Onaylı Block_3x1 bulunamadı"
+refmesh=reference3.data
+refnormals={}
+for p in refmesh.polygons:
+    for li in p.loop_indices:
+        refnormals.setdefault(refmesh.loops[li].vertex_index,tuple(refmesh.corner_normals[li].vector))
+bpy.ops.wm.save_as_mainfile(filepath=str(_PROJECT_ROOT / 'ArtProduction/AssetPreview/AssetPreview_Before4x1.blend'),copy=True)
+assert master and len(master.data.vertices)==4800,"Onaylı 1x1 master açık olmalı"
+source=master.data
+before_hash=hashlib.sha256(open(MASTER,'rb').read()).hexdigest()
+scene=bpy.data.scenes.new("BR_Block_4x1_Review");bpy.context.window.scene=scene
+scene.unit_settings.system='METRIC';scene.unit_settings.scale_length=1.0
+N=96
+SOURCE_N=192
+SAMPLE_STEP=2
+# Master yüzey normalleri üst panel kopyalarında korunur.
+source_normals={}
+for p in source.polygons:
+    for li in p.loop_indices:
+        vi=source.loops[li].vertex_index
+        if vi not in source_normals:source_normals[vi]=tuple(source.corner_normals[li].vector)
+verts=[];faces=[];vn=[]
+def add(v,n):
+    verts.append(tuple(v));vn.append(tuple(n));return len(verts)-1
+def ring_global(j):
+    ring=[]
+    for i in range(N):
+        v=source.vertices[j*SOURCE_N+i*SAMPLE_STEP].co.copy()
+        n=source_normals[j*SOURCE_N+i*SAMPLE_STEP]
+        if abs(v.x)<1e-7:
+            shifts=(1.5,-1.5) if i<N//2 else (-1.5,1.5)
+        else:shifts=(1.5 if v.x>0 else -1.5,)
+        for shift in shifts:
+            ring.append(add((v.x+shift,v.y,v.z),n))
+    return ring
+def bridge(a,b):
+    assert len(a)==len(b)
+    for i in range(len(a)):
+        k=(i+1)%len(a);faces.append((a[i],a[k],b[k],b[i]))
+body=[]
+for j in range(5):body.append(ring_global(j))
+for j in range(4):bridge(body[j],body[j+1])
+faces.append(tuple(reversed(body[0])))
+panel_bases=[];panel_exact_error=0
+for offset in (-1.5,-.5,.5,1.5):
+    rings=[]
+    for j in range(4,25):
+        ring=[]
+        for i in range(N):
+            # Onaylı 3x1'in ilk paneli, ölçeklenmeden doğrudan kopyalanır.
+            ri=490+(j-4)*N+i
+            v=refmesh.vertices[ri].co.copy()
+            v.x+=1.0
+            v.x+=offset
+            ring.append(add(v,refnormals[ri]))
+        rings.append(ring)
+    for j in range(len(rings)-1):bridge(rings[j],rings[j+1])
+    faces.append(tuple(rings[-1]))
+    panel_bases.append(rings[0])
+# Tek gövdenin üst tablası dört panel deliğiyle kısıtlı Delaunay olarak örülür.
+loops=[body[-1]]+panel_bases
+deck_ids=[i for loop in loops for i in loop]
+xy=[Vector(verts[i][:2]) for i in deck_ids]
+edges=[];start=0
+for loop in loops:
+    for i in range(len(loop)):edges.append((start+i,start+(i+1)%len(loop)))
+    start+=len(loop)
+dv,de,df,origv,orige,origf=delaunay_2d_cdt(xy,edges,[],0,1e-7)
+mapping=[]
+for k,v in enumerate(dv):
+    if origv[k]:mapping.append(deck_ids[origv[k][0]])
+    else:mapping.append(add((v.x,v.y,.220),(0,0,1)))
+def in_poly(x,y,ids):
+    inside=False
+    for k in range(len(ids)):
+        a=verts[ids[k]];b=verts[ids[(k+1)%len(ids)]]
+        if (a[1]>y)!=(b[1]>y):
+            if x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0]:inside=not inside
+    return inside
+deck_faces=0
+for f in df:
+    cx=sum(dv[i].x for i in f)/len(f);cy=sum(dv[i].y for i in f)/len(f)
+    if any(in_poly(cx,cy,p) for p in panel_bases):continue
+    ids=tuple(mapping[i] for i in f)
+    faces.append(ids);deck_faces+=1
+mesh=bpy.data.meshes.new("Block_4x1_IntegratedMesh");mesh.from_pydata(verts,[],faces);mesh.update()
+obj=bpy.data.objects.new("Block_4x1_Export",mesh);scene.collection.objects.link(obj)
+# Materyal kopyası masterın shaderını değiştirmez.
+for m in refmesh.materials:mesh.materials.append(m)
+bpy.context.view_layer.objects.active=obj;obj.select_set(True)
+bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(mesh);bm.free()
+# Koordinat tabanlı normal eşlemesi bmesh dönüşümünden bağımsızdır.
+lookup={tuple(round(c,7) for c in v):vn[i] for i,v in enumerate(verts)}
+for p in mesh.polygons:p.use_smooth=True
+bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.uv.smart_project(island_margin=.018);bpy.ops.object.mode_set(mode='OBJECT')
+tri=obj.modifiers.new("ExportTriangles",'TRIANGULATE');bpy.ops.object.modifier_apply(modifier=tri.name)
+from mathutils.kdtree import KDTree
+normal_tree=KDTree(len(verts))
+for idx,co in enumerate(verts):normal_tree.insert(co,idx)
+normal_tree.balance()
+custom=[]
+for p in mesh.polygons:
+    zs=[mesh.vertices[i].co.z for i in p.vertices]
+    flat=max(zs)-min(zs)<1e-6
+    for li in p.loop_indices:
+        v=mesh.vertices[mesh.loops[li].vertex_index].co
+        if flat:
+            n=(0,0,-1) if max(zs)<1e-6 else (0,0,1)
+        else:n=vn[normal_tree.find(v)[1]]
+        custom.append(n)
+mesh.normals_split_custom_set(custom)
+obj["grid_width"]=4;obj["grid_height"]=1;obj["cell_size"]=1.0;obj["cavity_depth"]=.040
+obj["master_reference"]=MASTER;obj["panel_base_clearance"]=.006
+obj["pivot"]="bottom center"
+# Master stüdyonun bağımsız kopyaları; asıl 1x1 objesi bu sahneye bağlanmaz.
+oldscene=family_scene
+for o in oldscene.objects:
+    if o.type in {'LIGHT','CAMERA'} or o.name.startswith("ReviewGround"):
+        copy=o.copy();copy.data=o.data.copy();scene.collection.objects.link(copy)
+        if o==oldscene.camera:scene.camera=copy
+scene.world=oldscene.world.copy()
+scene.render.resolution_x=1200;scene.render.resolution_y=900;scene.render.resolution_percentage=100
+scene.render.image_settings.file_format='PNG'
+cam=scene.camera
+def render(name,loc,ortho=True,scale=4.8):
+    cam.location=loc;cam.rotation_euler=(Vector((0,0,.15))-cam.location).to_track_quat('-Z','Y').to_euler()
+    cam.data.type='ORTHO' if ortho else 'PERSP';cam.data.ortho_scale=scale;cam.data.lens=55
+    scene.render.filepath=os.path.join(OUT,name+".png");bpy.ops.render.render(write_still=True)
+render("Top",(0,0,4))
+e=math.radians(40);d=7.2
+render("Perspective",(0,-d*math.cos(e),.15+d*math.sin(e)),False)
+render("Side",(3,0,.15),True,1.6)
+# Bağlı bileşen, kapalı manifold, boyut ve master tutarlılığı testleri.
+bm=bmesh.new();bm.from_mesh(mesh)
+remaining=set(bm.verts);components=0
+while remaining:
+    components+=1;stack=[remaining.pop()]
+    while stack:
+        v=stack.pop()
+        for edge in v.link_edges:
+            other=edge.other_vert(v)
+            if other in remaining:remaining.remove(other);stack.append(other)
+report={"export_executed":False,"panel_count":4,"diamond_count":4,"circumference_samples":N,"source_samples":SOURCE_N,"dimensions":list(obj.dimensions),"vertices":len(mesh.vertices),"triangles":len(mesh.polygons),"connected_components":components,"non_manifold_edges":sum(not e.is_manifold for e in bm.edges),"degenerate_faces":sum(f.calc_area()<1e-10 for f in bm.faces),"volume":bm.calc_volume(signed=True),"uv_layers":len(mesh.uv_layers),"panel_top_and_diamond_max_master_error":panel_exact_error,"cavity_depth":.040,"panel_base_inset":.006,"master_file_sha256_unchanged":hashlib.sha256(open(MASTER,'rb').read()).hexdigest()==before_hash}
+bm.free()
+assert report["connected_components"]==1 and report["non_manifold_edges"]==0 and report["degenerate_faces"]==0,report
+assert report["master_file_sha256_unchanged"] and panel_exact_error<1e-6
+for o in scene.objects:o.select_set(False)
+obj.select_set(True);bpy.context.view_layer.objects.active=obj
+with open(os.path.join(OUT,"qa.json"),"w") as f:json.dump(report,f,indent=2)
+# Dosya açıldığında genel perspektif görünür.
+render("Perspective",(0,-d*math.cos(e),.15+d*math.sin(e)),False)
+# Her model kendi koleksiyonunda, stüdyo ayrı tutulur.
+model_collection=bpy.data.collections.new("Block_4x1")
+studio_collection=bpy.data.collections.new("Preview_Studio_3x1")
+scene.collection.children.link(model_collection);scene.collection.children.link(studio_collection)
+model_collection.objects.link(obj)
+for o in list(scene.collection.objects):
+    if o==obj:scene.collection.objects.unlink(o)
+    else:studio_collection.objects.link(o);scene.collection.objects.unlink(o)
+# Ortak AssetPreview'da yalnız yeni model koleksiyonu eklenir.
+family_scene.collection.children.link(model_collection)
+obj.location=(0,4,0)
+cam.location.y+=4
+for light in studio_collection.objects:
+    if light.type=="LIGHT":light.location.y+=4
+# Karşılaştırma için tamamen ayrı kamera ve stüdyo kullanılır.
+comparison=bpy.data.scenes.new("BR_Block_4x1_Comparison")
+comparison.collection.children.link(model_collection)
+compare_reference=reference3.copy()
+compare_reference.name="Block_3x1_Comparison"
+comparison.collection.objects.link(compare_reference)
+compare_studio=bpy.data.collections.new("Review_Comparison_Studio_4x1")
+comparison.collection.children.link(compare_studio)
+for original in family_scene.objects:
+    if original.type in {'LIGHT','CAMERA'} or original.name.startswith("ReviewGround"):
+        cp=original.copy();cp.data=original.data.copy();compare_studio.objects.link(cp)
+        if cp.type=='LIGHT':cp.location.y+=3
+        if original==family_scene.camera:comparison.camera=cp
+comparison.world=family_scene.world.copy()
+ccam=comparison.camera
+ccam.location=(0,-4.5,6.5);ccam.rotation_euler=(Vector((0,3,.15))-ccam.location).to_track_quat('-Z','Y').to_euler()
+ccam.data.type='ORTHO';ccam.data.ortho_scale=5.8
+comparison.render.resolution_x=1400;comparison.render.resolution_y=1000;comparison.render.resolution_percentage=100
+comparison.render.image_settings.file_format='PNG';comparison.render.filepath=os.path.join(OUT,"Compare_3x1_4x1.png")
+bpy.context.window.scene=comparison
+bpy.ops.render.render(write_still=True)
+bpy.context.window.scene=family_scene
+assert all(signature(o)==protected_before[o.name] for o in protected),"Mevcut modeller veya stüdyo değişti"
+report["existing_models_and_preview_studio_unchanged"]=True
+report["collection"]=model_collection.name
+report["object_name"]=obj.name
+with open(os.path.join(OUT,"qa.json"),"w") as f:json.dump(report,f,indent=2)
+for o in family_scene.objects:o.select_set(False)
+obj.select_set(True);bpy.context.view_layer.objects.active=obj
+# Yalnız viewport kadrajı güncellenir; mevcut render kamerasına dokunulmaz.
+from mathutils import Quaternion
+for area in bpy.context.screen.areas:
+    if area.type=='VIEW_3D':
+        space=area.spaces.active
+        space.region_3d.view_location=Vector((0,2,.15))
+        space.region_3d.view_distance=8.5
+        space.region_3d.view_rotation=Quaternion((1,0,0),math.radians(35))
+bpy.ops.wm.save_as_mainfile(filepath=str(_PROJECT_ROOT / 'ArtProduction/AssetPreview/AssetPreview.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT,"Block_4x1.blend"),copy=True)
+print(json.dumps(report))
