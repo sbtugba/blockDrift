@@ -18,7 +18,7 @@ namespace BlockRift.Core
     /// <summary>Yalnız tahta snapshot'ıdır; coin, yardım envanteri ve Undo geçmişini içermez.</summary>
     // Snapshot, belirli bir andaki verinin bağımsız görüntüsüdür; Unity ekran görüntüsü değildir.
     // LevelDefinition başlangıç tarifini, BoardState o andaki tahta verisini taşır.
-    // Henüz hareket/Undo servisi yoktur; ileride bu snapshot'lar tahta geçmişinde kullanılabilir.
+    // MovementEngine yeni snapshot üretir; GameSession bunu sahiplenir. Undo henüz uygulanmadı.
     public sealed class BoardState
     {
         public IReadOnlyList<PiecePosition> Positions { get; }

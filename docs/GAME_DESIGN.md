@@ -1,7 +1,7 @@
 # BLOCK RIFT — Oyun Tasarım ve Oynanış Dokümanı
 
-**Sürüm:** 1.2 — 23 Ekim 2026 (kullanıcı onaylı kazanma, eş zamanlı düşüş ve yardım tüketimi açıklamaları)  
-**Durum:** Onaylanmış tasarım referansı; Aşama 1 veri modeli ve doğrulama kapsamı  
+**Sürüm:** 1.1 — 23 Ekim 2026 (ad güncellemesi; mekanikler değiştirilmedi)  
+**Durum:** Tasarım kararlarının derlemesi; kodlama öncesi referans  
 **Kapsam:** Oyun amacı, oynanış, mekanikler, seviyeler, çözüm doğrulama, ödüller, kayıt ve teknik kabul ölçütleri.  
 **Kapsam dışı:** Görsel tasarım, renk, sanat stili, ekran maketleri ve UI yerleşimleri.
 
@@ -20,7 +20,7 @@ Oyun eş nesneleri birleştirme veya blokları dış çerçeveden çıkarma oyun
 1. Oyuncu ana parçanın, kapının, hareketli engellerin, sabit gri engellerin ve varsa tetikleyicilerin konumlarını inceler.
 2. Herhangi bir hareketli engeli veya ana parçayı seçip yatay **ya da** dikey eksende sürükler.
 3. Parça engellere veya tahta sınırına çarpmadan, seçilen eksende boşluğun izin verdiği herhangi bir mesafeye kayabilir. Parçalar dönmez.
-4. Oyuncu parmağını bırakana kadar aynı eksende ileri-geri düzeltme yapabilir. **Kapıya ulaşma istisnası dışında sadece bırakıldığı son geçerli konum** kaydedilir. Başlangıç konumuna dönerse hamle oluşmaz.
+4. Oyuncu parmağını bırakana kadar aynı eksende ileri-geri düzeltme yapabilir. **Sadece bırakıldığı son geçerli konum** kaydedilir. Başlangıç konumuna dönerse hamle oluşmaz.
 5. Gerçek bir yer değiştirme **1 hamledir**; birkaç hücre kaymak ekstra hamle sayılmaz.
 6. Bırakılan parça bir **hareketli engelse** ve hamle sonunda aktif tetikleyici hücrelerinden en az birini örtüyorsa, ilgili tetikleyiciler tüketilir ve yer çekimi başlar. Sadece üzerinden geçmek tetiklemez.
 7. Yer çekimi sırasında aşağı doğru yer değiştirebilen engeller eş zamanlı, hücre hücre düşer. Daha fazla düşüş mümkün kalmayana kadar zincirleme devam eder. Bu otomatik hareketler ek hamle sayılmaz.
@@ -51,20 +51,36 @@ Oyuncu çıkışa uzanan koridoru kapatan 2×1 engeli yana kaydırır. Bu engel 
 
 ### 3.3 Hareketli engeller: kesin şekil kataloğu
 
-Yalnızca aşağıdaki **dokuz dikdörtgen** şekil kullanılabilir:
+Yalnızca aşağıdaki **sekiz dikdörtgen** şekil kullanılabilir:
 
 | Şekil | Hücre sayısı | Şekil | Hücre sayısı |
 |---|---:|---|---:|
 | 1×1 | 1 | 2×1 | 2 |
 | 1×2 | 2 | 1×3 | 3 |
 | 3×1 | 3 | 2×2 | 4 |
-| 3×3 | 9 | 1×4 | 4 |
-| 4×1 | 4 | | |
+| 1×4 | 4 | 4×1 | 4 |
+
 
 - `1×3` ve `3×1` farklı, **önceden tanımlanmış** yönelimlerdir.
 - **Parça döndürme yoktur.** L, T, Z, U gibi şekiller kullanılmaz.
 - Aynı şekilden bir bölümde birden fazla bulunabilir; kesin adet bölümün kalite ve çözülebilirlik analizine bağlıdır.
-- Hareketli engellerin tamamı dört yöne manuel kaydırılabilir ve etkin yer çekiminden etkilenir.
+- Hareketli engellerin manuel hareket yönleri şekle göre sınırlıdır (aşağıdaki tablo); bütün hareketli engeller etkin yer çekiminden etkilenir.
+
+#### Şekle bağlı manuel hareket yönleri (2026-10-27)
+
+**Yönelim başlangıçta sabittir; oyuncu blok döndüremez.** Şekiller `genişlik×yükseklik` olarak tanımlanır.
+
+| Hareketli engel | İzin verilen manuel yönler |
+|---|---|
+| `1×1` | Sol, sağ, yukarı, aşağı |
+| `2×1`, `3×1`, `4×1` | **Yalnızca sol ve sağ** |
+| `1×2`, `1×3`, `1×4` | **Yalnızca yukarı ve aşağı** |
+| `2×2` | Sol, sağ, yukarı, aşağı |
+
+Ana yıldızlı `1×1` hedef parça dört yöne kayabilir; yer çekiminden etkilenmez. `3×3` **katalogdan çıkarılmıştır**, yeni bölümde, level validator'da ve solver hamlelerinde geçersizdir.
+
+**Bu hareket sınırları yalnızca oyuncunun manuel sürüklemesi içindir.** Tetikleyiciyle oluşan otomatik yer çekiminde tüm hareketli engeller, yatay şekiller dâhil, mevcut çarpışma/cascade kurallarıyla **dikey aşağı** düşebilir. Manuel dikey yasağı otomatik düşüşü engellemez. Mevcut çıkış, Undo, kazanma ve tetikleyici kuralları değişmez.
+
 
 ### 3.4 Sabit gri engeller
 
@@ -82,15 +98,15 @@ Yalnızca aşağıdaki **dokuz dikdörtgen** şekil kullanılabilir:
 
 ## 4. Manuel hareketin kesin kuralları
 
-1. Bütün hareketli parçalar sağa, sola, yukarı ve aşağı hareket edebilir.
+1. Manuel hareket, §3.3 içindeki şekle bağlı yön izinleriyle sınırlıdır: yatay dikdörtgenler yalnız sağ/sol, dikey dikdörtgenler yalnız yukarı/aşağı, `1×1` ve `2×2` dört yön. Yıldızlı ana parça dört yön. İzin verilmeyen eksene sürükleme geçersizdir ve hamle oluşturmaz.
 2. Bir parmak sürüklemesinde yalnızca **tek eksen** kullanılabilir. Aynı eksende yön tersine çevrilebilir; dikeyden yataya veya yataydan dikeye geçiş için yeni hamle gerekir.
 3. Hareket seçilen eksende, herhangi bir sayıda **tam hücre** mesafesi olabilir.
 4. Yol boyunca parça hacmi her ara adımda kontrol edilir; parçalar birbirinin içinden geçemez.
 5. Engel veya sınır varsa **son geçerli hücrede** durur.
 6. Başlangıçla bitiş konumu aynıysa hamle sayılmaz, tetikleme yapılmaz.
 7. Gerçek yer değişimi tek hamledir; hareket boyunca geçilen ara hücreler tek başına tetikleyici çalıştırmaz.
-8. Kapıya ulaşma istisnası dışında hamle oyuncu parçayı bıraktığında kesinleşir; sonrasında varsa yer çekimi çözülür.
-9. Ana parça, hareket yolu üzerinde kapı hücresine ulaşırsa orada **hemen durur ve kazanır**; sonuna kadar sürüklenmez. Parmağın kaldırılması beklenmez; kazanma anında hareket kesinleşir ve bu sürükleme bir kez sayılır.
+8. Hamle ancak oyuncu parçayı bıraktığında kesinleşir; sonrasında varsa yer çekimi çözülür.
+9. Ana parça, hareket yolu üzerinde kapı hücresine ulaşırsa orada **hemen durur ve kazanır**; sonuna kadar sürüklenmez.
 
 ## 5. Yer çekimi mekaniği
 
@@ -106,7 +122,7 @@ Yalnızca aşağıdaki **dokuz dikdörtgen** şekil kullanılabilir:
 - Başlangıçta tetikleyici hücrelerinin üzerinde hiçbir parça bulunmaz.
 - Her tetikleyici **tek kullanımlıktır** ve oyuncu onu kendi iradesiyle kapatıp etkisizleştiremez; sadece çalıştırmaktan kaçınabilir.
 - İki tetikleyici aynı hamlede örtülürse **ikisi de tüketilir**, yer çekimi yalnızca **bir** zincirleme süreç olarak başlar.
-- Düşen parçaların tüketilmiş tetikleyiciler üzerine gelmesi yeniden tetiklemez. Cascade sırasında kullanılmamış tetikleyiciler de etkinleşmez.
+- Düşen parçaların tüketilmiş tetikleyiciler üzerine gelmesi yeniden tetiklemez.
 - Tetikleyicilerden kaçınılarak kazanılabilen **en az bir geçerli çözüm** her bölümde mevcut olmalıdır (tetikleyici içermeyen bölümlerde koşul zaten sağlanır).
 
 ### 5.3 Düşüş kuralları
@@ -115,7 +131,6 @@ Yalnızca aşağıdaki **dokuz dikdörtgen** şekil kullanılabilir:
 - Otomatik hareket **yalnızca dikey aşağı** olur. Çapraz veya yatay otomatik boşluk arama yoktur.
 - Bir engel ancak mevcut konumundan **bir satır aşağı taşındığında tüm hücreleri** geçerli ve çakışmasız kalıyorsa düşebilir.
 - Parçanın bir kısmının altında destek kalması, aşağı taşınacak tam şekil için engelse düşmesini engeller. Devrilme, dönme veya şekil değiştirme olmaz.
-- Birlikte düşebilen üst üste hareketli bloklar aynı simülasyon adımında ilerler. Üst blok, o adımda aşağı kayan alt bloğun boşalttığı hücreyi kullanabilir; hareket etmeyen blokların hücreleri kullanılamaz ve sonuçta çakışma oluşamaz.
 - Yer çekimi birden fazla parçayı aynı anda etkileyebilir: uygun engeller **hücre hücre eş zamanlı** ilerler; her aşamada çakışma kontrolü yapılır.
 - Düşüşler sonlanana kadar **zincirleme** devam eder. Yer çekimi fizik animasyonu değil, ızgara kurallarıyla hesaplanan deterministik bir geçiştir.
 - Yer çekimi yeni oyuncu hamlesi başlamadan **tamamen bitmelidir**.
@@ -132,8 +147,6 @@ Yer çekimi, oyuncunun işini otomatik kolaylaştıran düzenli bir temizleme si
 Oyuncu sürüklemeye başlar
     ↓
 Tek eksende geçerli konumlar önizlenir
-    ├─ Ana parça kapıya ulaştı → Bırakmayı beklemeden hareketi kesinleştir, 1 hamle say → WIN
-    └─ Ulaşmadı → Önizlemeye devam et
     ↓
 Oyuncu bırakır
     ↓
@@ -160,7 +173,7 @@ Artık düşebilen engel yok → Tahta sabitlendi
 Çözülebilirlik / çıkmaz kontrolü → Devam veya kurtarma seçenekleri
 ```
 
-> **Uygulama notu:** Bu akış kararlaştırılan mantıksal sırayı açıklar. Oyun motoru ve bölüm çözücü **aynı** geçiş işlevini kullanmalıdır; animasyon gerçek oyun durumunun tek kaynağı olmamalıdır. Ortak motor ve katmanlı mimari kullanıcı tarafından mühendislik yaklaşımı olarak onaylanmıştır; ayrı bir oyun mekaniği veya Kural 62 değildir.
+> **Uygulama notu:** Bu akış kararlaştırılan mantıksal sırayı açıklar. Oyun motoru ve bölüm çözücü **aynı** geçiş işlevini kullanmalıdır; animasyon gerçek oyun durumunun tek kaynağı olmamalıdır. Ortak motor yaklaşımı mühendislik önerisidir; ayrı bir kullanıcı onayı verilmiş Kural 62 olarak işaretlenmez.
 
 ## 7. Kazanma, kaybetme ve kurtarma
 
@@ -180,8 +193,7 @@ Ana 1×1 parçanın kapı hücresine girmesi **anında kazanma** anlamına gelir
 ### 7.3 Undo
 
 - Undo, kazanılan/satın alınan **envanter hakkıyla** kullanılır; hak yoksa kullanılamaz.
-- Tek Undo **son manuel hamle öncesindeki eksiksiz tahta durumuna** döndürür: ana parça, tüm engeller, düşüşlerin sonucu, tetikleyici tüketim durumları ve hamle geçmişi.
-- Undo, kullanılmış yardım hakkını (Undo/Hint) veya harcanmış coin'i geri vermez. Profil ekonomisi tahta geçmişinden ayrıdır.
+- Tek Undo **son manuel hamle öncesindeki eksiksiz oyun durumuna** döndürür: ana parça, tüm engeller, düşüşlerin sonucu, tetikleyici tüketim durumları ve hamle geçmişi.
 - Tetikleyiciler Undo ile önceki durumuna dönebilir; bu, tek kullanımlı olmalarıyla çelişmez.
 - Ücretsiz Restart her zaman mümkündür; envanterdeki haklar Restart nedeniyle silinmez.
 
@@ -190,7 +202,7 @@ Ana 1×1 parçanın kapı hücresine girmesi **anında kazanma** anlamına gelir
 - Envanter hakkıyla açılır.
 - Güncel tahta durumundan doğrulanmış çözümün **bir sonraki hamlesini** gösterir: doğru parça, yön ve kaç hücre.
 - Hamleyi otomatik yapmaz; oyuncu gerçekleştirir.
-- Hint hakkı yalnızca **güncel durum için doğrulanmış ipucu başarıyla sunulduğunda** tüketilir. Arama başarısızsa, kesilirse veya zaman/bellek sınırında tamamlanamazsa hak tüketilmez. Mevcut durum çözümsüzse de **Hint hakkı tüketilmez**. Sonuç sunulmadan tahta değişmişse eski durumun ipucu tüketim gerekçesi olamaz.
+- Mevcut durum çözümsüzse **Hint hakkı tüketilmez**.
 - Oyuncu zorlanınca Hint seçeneği kısa süreli vurgulanabilir; oyun durdurulmaz ve ücretsiz Hint verilmez.
 
 ## 8. Puanlama, yıldızlar ve oyun ekonomisi
@@ -229,7 +241,7 @@ Ana 1×1 parçanın kapı hücresine girmesi **anında kazanma** anlamına gelir
 
 ### 10.1 Üretim prensibi
 
-Algoritma sadece izinli dokuz hareketli parça tipini, 5×5 / 6×6 tahtaları, sabit engelleri, hedefi ve 0–2 tetikleyiciyi kullanır. Üretilen aday bölüm **önce çözülür ve analiz edilir**, sonrasında kalite sınırlarını karşılıyorsa yayınlanabilir bölümler havuzuna alınır.
+Algoritma sadece izinli sekiz hareketli parça tipini, 5×5 / 6×6 tahtaları, sabit engelleri, hedefi ve 0–2 tetikleyiciyi kullanır. Üretilen aday bölüm **önce çözülür ve analiz edilir**, sonrasında kalite sınırlarını karşılıyorsa yayınlanabilir bölümler havuzuna alınır.
 
 ### 10.2 Her bölüm için zorunlu analiz başlıkları
 
@@ -301,8 +313,8 @@ Bu veri şeması **uygulama önerisidir**, kesin dosya formatı değildir.
 ## 11. Teknik uygulama ve test ilkeleri
 
 - Hareket, tetikleme, düşüş ve kazanma hesapları, ekran animasyonundan bağımsız **tek, deterministik kural motoru** üzerinden uygulanmalıdır.
-- Bölüm üretici, çözücü ve Hint sistemi oyunun kullandığı **aynı geçiş kurallarını** kullanmalıdır (onaylanmış mühendislik yaklaşımı).
-- Testler en az şu durumları kapsamalıdır: dört yön; eksen kilidi; çok hücreli sürükleme; ara hücre çarpışmaları; aynı eksende geri dönme; hareket etmeyen hamle; kapıdan geçerken anında kazanma; kapı üzerinde hareketli engel; tetikleyiciden geçip üzerinde bitirmeme; iki tetikleyiciyi birlikte örtme; tetikleyici tüketimi; Undo ile geri yükleme; ana parça desteği; zincirleme/eş zamanlı düşme; tekrar yüklenen kayıt; çözümsüzlük ve Hint davranışı.
+- Bölüm üretici, çözücü ve Hint sistemi oyunun kullandığı **aynı geçiş kurallarını** kullanmalıdır (geliştirme önerisi).
+- Testler en az şu durumları kapsamalıdır: şekle göre izinli/yasak yönler; `3×3` reddi; tetikleyiciyle yatay parçanın otomatik aşağı düşmesi; eksen kilidi; çok hücreli sürükleme; ara hücre çarpışmaları; aynı eksende geri dönme; hareket etmeyen hamle; kapıdan geçerken anında kazanma; kapı üzerinde hareketli engel; tetikleyiciden geçip üzerinde bitirmeme; iki tetikleyiciyi birlikte örtme; tetikleyici tüketimi; Undo ile geri yükleme; ana parça desteği; zincirleme/eş zamanlı düşme; tekrar yüklenen kayıt; çözümsüzlük ve Hint davranışı.
 - Algoritmanın ürettiği **çözüm hamleleri**, gerçek oyun motorunda baştan sona yeniden yürütülerek doğrulanmalıdır.
 - Aynı başlangıç durumu ve aynı hamle dizisi **aynı sonuç** üretmelidir.
 
@@ -312,7 +324,7 @@ Bu veri şeması **uygulama önerisidir**, kesin dosya formatı değildir.
 |---|---|
 | Her hamleden sonra yer çekimi | **Kaldırıldı**; yalnızca tek kullanımlık tetikleyici etkinleşince |
 | Otomatik sağa/sola veya çapraz kayma | **Kaldırıldı**; yalnızca dikey aşağı düşme |
-| L, T, U, Z ve serbest şekil üretimi | **Kaldırıldı**; kesin dokuz dikdörtgen şekil |
+| L, T, U, Z, 3×3 ve serbest şekil üretimi | **Kaldırıldı**; kesin sekiz dikdörtgen şekil |
 | Ana parçanın değişken boyutu | **Kaldırıldı**; her zaman 1×1 |
 | Ana parçanın yer çekimiyle düşmesi | **Kaldırıldı**; düşmez |
 | Kapının tahta dışında veya yalnızca üstte olması | **Kaldırıldı**; oyun alanının herhangi bir iç hücresinde |
@@ -329,13 +341,13 @@ Bunlar **onaylanmış kurallara ek yeni mekanikler değildir**; belirsiz durumla
 3. **Tekrar ödül koruması:** Önceki öneri yalnızca iyileştirilen yıldız rekorunun coin farkını vermekti; kesin ayrı onay kaydı yok. Ekonomi sömürüsünü engelleme ihtiyacı kesin, yöntemi teknik kabul aşamasında belirlenmeli.
 4. **Undo / Hint yıldız etkisi:** Ek yıldız cezası kesin kararlaştırılmadı; yokmuş gibi kodlamaya kilitlemeyin.
 5. **Durum uzayı maliyeti:** Tüm durumların eksiksiz incelenmesi aday bazı bölümlerde pahalı olabilir. Analiz tamamlanmadan veya hesaplama sınırına takıldığında bölümü **kanıtlanmış gibi kabul etmeyin**; ret/inceleme durumuna alın.
-6. **Yer çekimi sırasında eş zamanlılık — karara bağlandı:** Birlikte düşebilen üst ve alt blok aynı adımda hareket eder; boşalan hücre kullanılabilir (§5.3). Deterministik ve çakışmasız algoritmanın uygulanması/test edilmesi teknik görevdir.
+6. **Yer çekimi sırasında eş zamanlılık:** Bir üst ve bir alt engelin aynı zaman adımında aynı doğrultuda ilerlediği durumlarda “hedef hücre” çakışması ve aynı adımda boşalacak hücre kullanımına dair geçiş algoritması testlerle kesinleştirilmeli; deterministik olmalı, hiçbir parçayı üst üste bindirmemeli.
 7. **Tetikleyiciye dokunulmadan çözüm:** Bu gereklilik, yer çekimi **oyunun ana farkı** olmasına rağmen tetikleyicinin bazı bölümlerde hiç kullanılmadan geçilebilmesi anlamına gelir. Karar kasıtlıdır; değiştirmeyin.
 
 ## 14. Önerilen geliştirme sırası (karar değil, plan)
 
 1. Dokümanı mevcut oyun kuralları için tek kaynak ilan et.
-2. 5×5 ızgara, ana parça, kapı, dokuz şekil ve dört yönlü manuel kaydırma çekirdeğini kur.
+2. 5×5 ızgara, ana parça, kapı, sekiz şekil ve şekle bağlı manuel yön izinlerini uygula.
 3. Çarpışma, hareket sayımı, kazanma ve sabit engelleri test et.
 4. Tetikleyici durum makinesini ve tek kullanımlık etkinleşmeyi ekle.
 5. Eş zamanlı dikey düşüş ve zincirleme hesaplamasını bağımsız testlerle doğrula.
@@ -347,7 +359,4 @@ Bunlar **onaylanmış kurallara ek yeni mekanikler değildir**; belirsiz durumla
 
 ---
 
-**Tek cümlelik oyun tanımı:** Block Rift, oyuncunun 5×5 veya 6×6 tahtada engelleri dört yöne kaydırarak 1×1 ana parçayı içerideki kapıya ulaştırdığı; tek kullanımlık tetikleyicilerin bütün hareketli engelleri aşağı düşürerek yanlış hamleleri stratejik bir tehlikeye dönüştürdüğü, çözülebilirliği kanıtlanan bölümlerden oluşan bir mobil bulmaca oyunudur.
-
-
-
+**Tek cümlelik oyun tanımı:** Block Rift, oyuncunun 5×5 veya 6×6 tahtada engelleri şekillerinin izin verdiği yönlerde kaydırarak 1×1 ana parçayı içerideki kapıya ulaştırdığı; tek kullanımlık tetikleyicilerin bütün hareketli engelleri aşağı düşürerek yanlış hamleleri stratejik bir tehlikeye dönüştürdüğü, çözülebilirliği kanıtlanan bölümlerden oluşan bir mobil bulmaca oyunudur.

@@ -1,0 +1,243 @@
+{
+    "before": [
+        {
+            "name": "1x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/1x1.fbx",
+            "position": "(-1.4003160, 0.1623237, -1.4997040)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/1x1.fbx :: Mesh_0"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": -1.399999976158142,
+                "y": 0.16411197185516358,
+                "z": -1.5000009536743165
+            },
+            "size": {
+                "x": 1.0,
+                "y": 0.2882239520549774,
+                "z": 0.8795728087425232
+            },
+            "inCamera": true
+        },
+        {
+            "name": "2x2 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/2x2.fbx",
+            "position": "(1.3996930, 0.1299722, -1.4996900)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/2x2.fbx :: Mesh_0"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": 1.399999976158142,
+                "y": 0.13023605942726136,
+                "z": -1.5000009536743165
+            },
+            "size": {
+                "x": 0.9999949932098389,
+                "y": 0.22047211229801179,
+                "z": 1.0000020265579224
+            },
+            "inCamera": true
+        },
+        {
+            "name": "3x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/3x1.fbx",
+            "position": "(-1.4005130, 0.1095733, 1.5004200)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/3x1.fbx :: mesh_node"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": -1.399999976158142,
+                "y": 0.10905735939741135,
+                "z": 1.5000009536743165
+            },
+            "size": {
+                "x": 0.9985569715499878,
+                "y": 0.17811471223831178,
+                "z": 0.3807219862937927
+            },
+            "inCamera": true
+        },
+        {
+            "name": "4x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/4x1.fbx",
+            "position": "(1.3995040, 0.0884680, 1.5005050)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/4x1.fbx :: mesh_node"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": 1.399999976158142,
+                "y": 0.08787959069013596,
+                "z": 1.5000009536743165
+            },
+            "size": {
+                "x": 0.9985878467559815,
+                "y": 0.13575918972492219,
+                "z": 0.3258340060710907
+            },
+            "inCamera": true
+        }
+    ],
+    "after": [
+        {
+            "name": "1x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/1x1.fbx",
+            "position": "(-1.4003160, 0.1623237, -1.4997040)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/1x1.fbx :: Mesh_0"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": -1.399999976158142,
+                "y": 0.16411197185516358,
+                "z": -1.5000009536743165
+            },
+            "size": {
+                "x": 1.0,
+                "y": 0.2882239520549774,
+                "z": 0.8795728087425232
+            },
+            "inCamera": true
+        },
+        {
+            "name": "2x2 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/2x2.fbx",
+            "position": "(1.3996930, 0.1299722, -1.4996900)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/2x2.fbx :: Mesh_0"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": 1.399999976158142,
+                "y": 0.13023605942726136,
+                "z": -1.5000009536743165
+            },
+            "size": {
+                "x": 0.9999949932098389,
+                "y": 0.22047211229801179,
+                "z": 1.0000020265579224
+            },
+            "inCamera": true
+        },
+        {
+            "name": "3x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/3x1.fbx",
+            "position": "(-1.4005130, 0.1095733, 1.5004200)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/3x1.fbx :: mesh_node"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": -1.399999976158142,
+                "y": 0.10905735939741135,
+                "z": 1.5000009536743165
+            },
+            "size": {
+                "x": 0.9985569715499878,
+                "y": 0.17811471223831178,
+                "z": 0.3807219862937927
+            },
+            "inCamera": true
+        },
+        {
+            "name": "4x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/4x1.fbx",
+            "position": "(1.3995040, 0.0884680, 1.5005050)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071068)",
+            "scale": "(52.5657800, 52.5657800, 52.5657800)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/4x1.fbx :: mesh_node"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": 1.399999976158142,
+                "y": 0.08787959069013596,
+                "z": 1.5000009536743165
+            },
+            "size": {
+                "x": 0.9985878467559815,
+                "y": 0.13575918972492219,
+                "z": 0.3258340060710907
+            },
+            "inCamera": true
+        },
+        {
+            "name": "Block_2x1 | FBX Preview",
+            "prefab": "Assets/_BlockRift/Art/Models/Block_2x1.fbx",
+            "position": "(0.0000000, 0.0200001, -4.3000000)",
+            "rotation": "(-0.7071068, 0.0000000, 0.0000000, 0.7071067)",
+            "scale": "(100.0000000, 100.0000000, 100.0000000)",
+            "activeSelf": true,
+            "activeInHierarchy": true,
+            "sceneHidden": false,
+            "meshes": [
+                "Assets/_BlockRift/Art/Models/Block_2x1.fbx :: Block_2x1"
+            ],
+            "renderers": 1,
+            "enabledRenderers": 1,
+            "center": {
+                "x": 0.0,
+                "y": 0.17000004649162293,
+                "z": -4.300000190734863
+            },
+            "size": {
+                "x": 2.0,
+                "y": 0.3000001013278961,
+                "z": 0.9999999403953552
+            },
+            "inCamera": true
+        }
+    ],
+    "reopened": true,
+    "overlap": false,
+    "otherTransformsPreserved": true
+}

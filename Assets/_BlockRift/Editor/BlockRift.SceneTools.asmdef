@@ -1,0 +1,6 @@
+{
+  "name": "BlockRift.SceneTools",
+  "rootNamespace": "BlockRift.Editor",
+  "references": ["BlockRift.Core", "BlockRift.Presentation", "Unity.InputSystem", "UnityEngine.UI", "Unity.RenderPipelines.Universal.Runtime"],
+  "includePlatforms": ["Editor"]
+}

@@ -16,11 +16,12 @@ Oyun için bağlayıcı kaynak `docs/GAME_DESIGN.md`'dir (eski isim Gravity Gate
 | Tahta | **5×5 veya 6×6**, her şey tamsayı hücrede |
 | Hedef parça | **Tek 1×1 ana parça**; 4 yön manuel hareket; gravity etkilemez |
 | Kapı | Tahta içindeki **herhangi bir tek hücre**; ana parça değince anında kazanır |
-| Hareketli parça tipleri | Tam **9** boyut: `1×1`, `2×1`, `1×2`, `1×3`, `3×1`, `2×2`, `3×3`, `1×4`, `4×1` |
+| Hareketli parça tipleri | Tam **8** boyut: `1×1`, `2×1`, `1×2`, `1×3`, `3×1`, `2×2`, `1×4`, `4×1` |
 | Rotasyon | **Yok**; genişlik/yükseklik korunur; aynı şekil birden çok olabilir |
 | Sabit engel | Tek/bağlı gri hücreler; hareket/düşüş yok; kapı üzerinde olamaz |
 | Kapı işgali | Hareketli engel kapıdan geçebilir/üzerinde kalabilir; kapı fiziksel duvar değil |
-| Sürükleme | Bir hareket **tek eksen**; o eksende ileri/geri önizleme serbest; kapıya ulaşma istisnası dışında yalnız bırakılan son geçerli pozisyon hesaplanır |
+| Manuel hareket izni | `2×1/3×1/4×1` yalnız yatay, `1×2/1×3/1×4` yalnız dikey, `1×1/2×2` ve yıldızlı hedef dört yön |
+| Sürükleme | Bir hareket **izinli tek eksen**; o eksende ileri/geri önizleme serbest; yalnız bırakılan son geçerli pozisyon hesaplanır |
 | Çarpışma | Tahta sınırı ve tüm diğer parça ayakizleri; tüm ara hücre adımlarında kontrol; ilk engelden önceki son geçerli konum |
 | Hamle sayımı | Gerçek manuel konum değişikliği **1 hamle** (mesafeden bağımsız); başlangıca dönüş **0** |
 | Trigger | Bölümde **0–2**, kapıdan farklı ve başlangıçta boş; tek kullanımlık, bağımsız, disarm yok |
@@ -30,8 +31,8 @@ Oyun için bağlayıcı kaynak `docs/GAME_DESIGN.md`'dir (eski isim Gravity Gate
 | Hedef ve gravity | Ana parça düşmez/ezilmez; engellerin altında **destek** veya çarpışma engelidir |
 | Win | Ana parça kapı yoluna **girdiği anda** işlem biter; sonrasına sürükleme yok |
 | Restart | **Ücretsiz**; bölüm başlangıç durumuna döner |
-| Undo | Envanter hakkıyla **son manuel hamle öncesi tahta state'i** (trigger consumed ve otomatik düşüş dâhil) geri gelir; coin/yardım hakkı geri verilmez |
-| Hint | Hakkı varsa doğrulanmış çözümden **parça + yön + hücre sayısı**; hamleyi otomatik yapmaz; yalnız doğrulanmış güncel ipucu başarıyla sunulunca tüketir |
+| Undo | Envanter hakkıyla **son manuel hamle öncesi tüm state** (trigger consumed ve otomatik düşüş dâhil) geri gelir |
+| Hint | Hakkı varsa doğrulanmış çözümden **parça + yön + hücre sayısı**; hamleyi otomatik yapmaz; çözümsüzse tüketmez |
 | Deadlock | Gerçek state'den çözüm yoksa doğrulanmış uyarı; Restart ve varsa Undo seçenekleri; zaman/hamle limiti yok |
 | İlerleme | Bölümler sırayla açılır; yıldız engellemez; progress/autosave |
 | Ekonomi | Başlangıç **100 coin**; 1/2/3 yıldız **10/20/30**; Undo **50**, Hint **100** coin, ilk parametreler, config'den |
@@ -39,7 +40,7 @@ Oyun için bağlayıcı kaynak `docs/GAME_DESIGN.md`'dir (eski isim Gravity Gate
 ## Transactional move algoritması
 
 ```text
-Input preview: parça ve eksen seç; yalnız hücrelerde doğrula; ana parça kapıya ulaşırsa bırakmayı beklemeden 1 hamle ve WIN kesinleştir
+Input preview: parça ve eksen seç; yalnız hücrelerde doğrula
 Pointer release: hedef son geçerli hücreye snap
   ├─ Başlangıç = bitiş → NO_OP (hamle yok, trigger yok, history yok)
   └─ Farklı → PRE_MOVE_STATE history snapshot
@@ -83,7 +84,7 @@ Pointer release: hedef son geçerli hücreye snap
 
 ## Zorunlu kabul testleri
 
-1. Dört yön ve tüm dokuz parça footprint'i; 5×5/6×6 sınırları.
+1. Şekle bağlı manuel izinli/yasak yönler ve tüm sekiz parça footprint'i; 5×5/6×6 sınırları; `3×3` reddi.
 2. Her ara hücreyi kontrol eden çok-hücre drag; engelden önce dur; rotasyon yok.
 3. Aynı eksende ileri/geri bırakma; başlangıca dönüş `NO_OP` ve tetik yok.
 4. Ana parça yolun ortasında kapıya girdiyse orada dur/instant win; hareketli engel kapıda durabilsin.
@@ -100,10 +101,22 @@ Pointer release: hedef son geçerli hücreye snap
 
 Değiştirilen mantık, kapsanan GDD maddeleri, yeni testler, koşulan test komutları ve sonuçlarını bildir. Test koşulamadıysa nedenini net söyle; 'tüm kurallar çalışıyor' şeklinde kanıtsız rapor verme.
 
-## Kullanıcı onaylı açıklamalar — 23 Ekim 2026
-- GDD v1.2 esas alınır. Ana parça sürükleme sırasında kapıya ulaştığı anda kazanır; parmağın kaldırılması beklenmez ve aynı sürükleme ikinci kez sayılmaz.
-- Birlikte düşebilen üst/alt hareketli bloklar aynı adımda ilerler; o adımda boşalan hücre kullanılabilir. Hareket etmeyen blokların hücreleri kullanılamaz.
-- Undo tahta, tetikleyici ve hamle geçmişini geri yükler; harcanan coin veya kullanılan yardım hakkını geri vermez. Tahta snapshot'ı profil ekonomisinden ayrıdır.
-- Hint yalnız güncel durum için doğrulanmış ipucu başarıyla sunulduğunda tüketilir. Başarısız/kesik arama, başarısız sunum veya eskimiş sonuç hak tüketmez.
-- Aşama 1 BoardValidator yapısal geçerlilik ve geçici başlangıç kararlılığını denetler; çözülebilirlik, tetikleyicisiz yol veya yayın kabulü kanıtı değildir.
+## 2026-10-27 — Manuel yön kısıtı / otomatik gravity ayrımı
 
+### Şekle bağlı manuel hareket yönleri (2026-10-27)
+
+**Yönelim başlangıçta sabittir; oyuncu blok döndüremez.** Şekiller `genişlik×yükseklik` olarak tanımlanır.
+
+| Hareketli engel | İzin verilen manuel yönler |
+|---|---|
+| `1×1` | Sol, sağ, yukarı, aşağı |
+| `2×1`, `3×1`, `4×1` | **Yalnızca sol ve sağ** |
+| `1×2`, `1×3`, `1×4` | **Yalnızca yukarı ve aşağı** |
+| `2×2` | Sol, sağ, yukarı, aşağı |
+
+Ana yıldızlı `1×1` hedef parça dört yöne kayabilir; yer çekiminden etkilenmez. `3×3` **katalogdan çıkarılmıştır**, yeni bölümde, level validator'da ve solver hamlelerinde geçersizdir.
+
+**Bu hareket sınırları yalnızca oyuncunun manuel sürüklemesi içindir.** Tetikleyiciyle oluşan otomatik yer çekiminde tüm hareketli engeller, yatay şekiller dâhil, mevcut çarpışma/cascade kurallarıyla **dikey aşağı** düşebilir. Manuel dikey yasağı otomatik düşüşü engellemez. Mevcut çıkış, Undo, kazanma ve tetikleyici kuralları değişmez.
+
+- Yasak manuel yön için `NO_OP`/invalid davranışını ve state/moveCount/history sabitliğini test et.
+- Solver ile canlı Core aynı şekil izin denetimini kullanmalı.

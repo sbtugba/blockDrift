@@ -1,0 +1,5 @@
+{
+  "name": "BlockRift.Presentation",
+  "rootNamespace": "BlockRift.Presentation",
+  "references": ["BlockRift.Core", "BlockRift.Application", "Unity.InputSystem", "UnityEngine.UI"]
+}

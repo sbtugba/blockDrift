@@ -36,7 +36,7 @@ Bu format **önerilen şema**dır, mevcut oyun dosya biçimi değil. JSON/Script
 ## Aday bölüm doğrulama — erken ret
 
 1. Boyut 5×5/6×6; tam bir 1×1 target ve tek exit; exit grid içi.
-2. Yalnız dokuz dikdörtgen shape: `1×1`, `2×1`, `1×2`, `1×3`, `3×1`, `2×2`, `3×3`, `1×4`, `4×1`.
+2. Yalnız sekiz dikdörtgen shape: `1×1`, `2×1`, `1×2`, `1×3`, `3×1`, `2×2`, `1×4`, `4×1` (`3×3` geçersiz).
 3. Hiçbir parça grid dışına taşmaz/üst üste binmez. Piece ID'ler benzersiz; aynı shape yinelenebilir. Sabit parça exit üzerinde olmaz.
 4. Trigger adedi 0–2, hücreleri birbirinden ve exit'ten farklı, ilk başta **her biri boş**; target veya diğer parçayla çakışmaz.
 5. Başlangıç düzeni hipotetik düşüş karşısında **kararlı** (mevcut GDD güvenli geçici ilke). Bu koşulu açık config'e dönüştürmeden kaldırma.
@@ -101,7 +101,7 @@ Her üretimde `seed`, `generatorVersion`, `rulesVersion`, `solverVersion`, kulla
 
 ## Zorunlu test paketi
 
-1. GDD invariant ihlali içeren her adayın validasyonda reddi; exit/trigger overlap, başlangıç dolu trigger, 9 şekil dışı parça.
+1. GDD invariant ihlali içeren her adayın validasyonda reddi; exit/trigger overlap, başlangıç dolu trigger, 8 şekil dışı parça.
 2. Hiç hareket olmayan hamle kenar olarak üretilmez; çok hücre kayma **tek adım** maliyetlidir.
 3. Solver çözüm path'i gameplay Core ile tekrar oynatıldığında aynı sonuç, kazanma ve kullanılan trigger bayrakları.
 4. Tek/çift trigger, cascade, üst üste blokların eş zamanlı düşmesi, trigger'dan kaçınan alternatif çözüm.
@@ -116,9 +116,25 @@ Her üretimde `seed`, `generatorVersion`, `rulesVersion`, `solverVersion`, kulla
 
 Her batch için toplam aday, geçerli aday, solver tarafından ispatlanan, no-trigger kanıtı, kabul/ret/eksik analiz sayısı, en kısa çözüm aralığı, zorluk dağılımı, çeşitlilik özeti, çalıştırılan testler ve bilinen limitleri yaz. Kanıtlanmamış adayı "bölüm hazır" diye sunma.
 
-## Kullanıcı onaylı açıklamalar — 23 Ekim 2026
-- GDD v1.2 esas alınır. Ana parça sürükleme sırasında kapıya ulaştığı anda kazanır; parmağın kaldırılması beklenmez ve aynı sürükleme ikinci kez sayılmaz.
-- Birlikte düşebilen üst/alt hareketli bloklar aynı adımda ilerler; o adımda boşalan hücre kullanılabilir. Hareket etmeyen blokların hücreleri kullanılamaz.
-- Undo tahta, tetikleyici ve hamle geçmişini geri yükler; harcanan coin veya kullanılan yardım hakkını geri vermez. Tahta snapshot'ı profil ekonomisinden ayrıdır.
-- Hint yalnız güncel durum için doğrulanmış ipucu başarıyla sunulduğunda tüketilir. Başarısız/kesik arama, başarısız sunum veya eskimiş sonuç hak tüketmez.
-- Aşama 1 BoardValidator yapısal geçerlilik ve geçici başlangıç kararlılığını denetler; çözülebilirlik, tetikleyicisiz yol veya yayın kabulü kanıtı değildir.
+## 2026-10-27 — Hamle üretiminde şekle bağlı yönler
+
+### Şekle bağlı manuel hareket yönleri (2026-10-27)
+
+**Yönelim başlangıçta sabittir; oyuncu blok döndüremez.** Şekiller `genişlik×yükseklik` olarak tanımlanır.
+
+| Hareketli engel | İzin verilen manuel yönler |
+|---|---|
+| `1×1` | Sol, sağ, yukarı, aşağı |
+| `2×1`, `3×1`, `4×1` | **Yalnızca sol ve sağ** |
+| `1×2`, `1×3`, `1×4` | **Yalnızca yukarı ve aşağı** |
+| `2×2` | Sol, sağ, yukarı, aşağı |
+
+Ana yıldızlı `1×1` hedef parça dört yöne kayabilir; yer çekiminden etkilenmez. `3×3` **katalogdan çıkarılmıştır**, yeni bölümde, level validator'da ve solver hamlelerinde geçersizdir.
+
+**Bu hareket sınırları yalnızca oyuncunun manuel sürüklemesi içindir.** Tetikleyiciyle oluşan otomatik yer çekiminde tüm hareketli engeller, yatay şekiller dâhil, mevcut çarpışma/cascade kurallarıyla **dikey aşağı** düşebilir. Manuel dikey yasağı otomatik düşüşü engellemez. Mevcut çıkış, Undo, kazanma ve tetikleyici kuralları değişmez.
+
+- `EnumerateLegalMoves` ve `TryApplyMove` **aynı** izin tablosunu kullanır: yasak eksende hamle üretme veya kabul etme.
+- BFS/A*/hint/proof path hesaplamaları eksen kısıtlarına uyar; geçmiş dört-yön solver kanıtlarını yeni rulesVersion altında yeniden doğrula.
+- Tetikleyici cascadesi manuel yön tablosundan bağımsızdır: yatay parçalar otomatik aşağı düşebilir.
+- Seri hâle getirilmiş eski level'ları `rulesVersion` ile ayır; `3×3` veya yeni kurallarda çözümsüzleşen seviyeleri sessizce dönüştürme, açıkça yeniden doğrula/reject et.
+- Generator offline çalışır; 5×5/6×6 doğrudan zorluk etiketi değildir.

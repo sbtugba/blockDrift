@@ -1,0 +1,1 @@
+{"name":"BlockRift.PlayModeTests","references":["BlockRift.Core","BlockRift.Application","BlockRift.Presentation","Unity.InputSystem","Unity.InputSystem.TestFramework","UnityEngine.UI"],"optionalUnityReferences":["TestAssemblies"]}

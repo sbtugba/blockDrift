@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0484c44c2dd0a6d42ba77b7986f2bca7, type: 3}
+  m_Name: GameplayVisualCatalog
+  m_EditorClassIdentifier: BlockRift.Presentation::BlockRift.Presentation.VisualPrefabCatalog
+  entries:
+  - assetId: Block_1x1
+    width: 1
+    height: 1
+    board: 0
+    prefab: {fileID: 7094923568114666172, guid: f29d31a8765f7a54f8475dd9a510302f, type: 3}
+  - assetId: Block_2x1
+    width: 2
+    height: 1
+    board: 0
+    prefab: {fileID: 2373491124621114722, guid: 44ccd5d268dc07c46acb4ecb035f24dd, type: 3}
+  - assetId: Block_3x1
+    width: 3
+    height: 1
+    board: 0
+    prefab: {fileID: 1712821132489967097, guid: 66f88524c5ea95b47809999593990181, type: 3}
+  - assetId: Block_4x1
+    width: 4
+    height: 1
+    board: 0
+    prefab: {fileID: 9006977121995780699, guid: 50bff426f97064547b10b37089afbee9, type: 3}
+  - assetId: Block_2x2
+    width: 2
+    height: 2
+    board: 0
+    prefab: {fileID: 3120830529967704003, guid: c5c5d5575163b4a49a959c49740b9f54, type: 3}
+  - assetId: Special_1x1_Star
+    width: 1
+    height: 1
+    board: 0
+    prefab: {fileID: 4458356421982612323, guid: ca3295560db77bd4c9857f8e8d8a270e, type: 3}
+  - assetId: Obstacle_1x1_Stone
+    width: 1
+    height: 1
+    board: 0
+    prefab: {fileID: 4702822089350784664, guid: 4f738f7826df52542ac845a59d151e6b, type: 3}
+  - assetId: Board_6x6
+    width: 6
+    height: 6
+    board: 1
+    prefab: {fileID: 3654418414016036287, guid: aacb4bf0c0d533f438969d837b95be2e, type: 3}
