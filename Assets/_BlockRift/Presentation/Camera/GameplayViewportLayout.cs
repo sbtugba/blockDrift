@@ -39,6 +39,9 @@ namespace BlockRift.Presentation
         {
             get
             {
+                // Kum oynanış alanından geniştir; kamera hedefini onun asimetrik bounds'u kaydırmamalı.
+                if (visualLayout && visualLayout.TryGetPresentationBounds(out _))
+                    return visualLayout.transform.TransformPoint(new Vector3(0, visualLayout.Grid.SurfaceHeight, 0));
                 if (cachedFocusRoot != focusRoot)
                 {
                     cachedFocusRoot = focusRoot;

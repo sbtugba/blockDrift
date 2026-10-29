@@ -31,8 +31,8 @@ namespace BlockRift.Tests
             Assert.That(columns.Max()-columns.Min(),Is.GreaterThanOrEqualTo(3),"Rota tek sütunluk çözüm olmamalı");
             Assert.That(MovementEngine.IsWon(level,state),Is.True);
         }
-        [TestCase("gate")] [TestCase("blue")]
-        public void EveryDesignedObstacleMustMoveInAnyWinningSolution(string id)
+        [TestCase("B")] [TestCase("C")]
+        public void RequiredGatewayBlocksMustMoveInAnyWinningSolution(string id)
         {
             var level=LevelOne.Create(); var frozen=level.Pieces.Single(p=>p.Id==id);
             // Hedefi örten bir parçayı FixedCell yapmak GDD'yi ihlal eder. Özgün geçerli level korunur;
@@ -47,41 +47,37 @@ namespace BlockRift.Tests
                 Assert.That(seen.Count,Is.LessThan(100000),"INCOMPLETE: dondurma kanıtı tamamlanmadı");
             }
         }
-        [Test] public void VisibleExitPocketNeedsItsApproachOpened()
+        [Test] public void VisibleExitNeedsLinkedHorizontalAndVerticalClearances()
         {
             var level=LevelOne.Create(); var state=BoardState.CreateInitial(level);
-            var gate=level.Pieces.Single(p=>p.Id=="gate");
-            Assert.That(level.Exit.X>=gate.Start.X&&level.Exit.X<gate.Start.X+gate.Width&&
-                level.Exit.Y>=gate.Start.Y&&level.Exit.Y<gate.Start.Y+gate.Height,Is.False,"Öğreticide hedef görünür kalmalı");
-            Assert.That(gate.Start.Y,Is.EqualTo(level.Exit.Y+1),"Büyük blok hedefi değil, hedef cebinin üst girişini kapatır");
-            Assert.That(MovementEngine.EnumerateLegalMoves(level,state).Any(m=>m.PieceId=="gate"),Is.False,"Geçit başlangıçta manevra yapamamalı");
-            var cleared=MovementEngine.Apply(level,state,new MoveCommand("blue",MoveAxis.Vertical,2));
-            Assert.That(cleared.Changed,Is.True);
-            var opened=MovementEngine.Apply(level,cleared.State,new MoveCommand("gate",MoveAxis.Vertical,2));
-            Assert.That(opened.ActualDistance,Is.EqualTo(2),"Büyük bloğun iki satırlık park alanı açılmalı");
-            var partial=MovementEngine.Apply(level,cleared.State,new MoveCommand("gate",MoveAxis.Vertical,1));
-            var p=MovementEngine.Position(partial.State,"gate");
-            Assert.That(p.Y,Is.EqualTo(level.Exit.Y+2));
-            // Bir satır yükseltince cebin hemen üstü boşalır, fakat cebin üst ağzı hâlâ kapalıdır.
-            var fixedCells=new List<Cell>(level.FixedCells);
-            foreach(var obstacle in level.Pieces.Where(q=>q.Kind==PieceKind.Obstacle))
-            {
-                var origin=MovementEngine.Position(partial.State,obstacle.Id);
-                for(int y=0;y<obstacle.Height;y++) for(int x=0;x<obstacle.Width;x++) fixedCells.Add(new Cell(origin.X+x,origin.Y+y));
-            }
-            var pocket=new LevelDefinition("partial-pocket",1,1,6,6,level.Exit,level.Pieces.Where(q=>q.Kind==PieceKind.Target),fixedCells,Array.Empty<Cell>());
-            Assert.That(BoardSolver.Solve(pocket,BoardState.CreateInitial(pocket)).Status,Is.EqualTo(SearchStatus.Unsolvable));
+            Assert.That(level.Pieces.Any(p=>level.Exit.X>=p.Start.X&&level.Exit.X<p.Start.X+p.Width&&
+                level.Exit.Y>=p.Start.Y&&level.Exit.Y<p.Start.Y+p.Height),Is.False,"Hedef başlangıçta görünür");
+            Assert.That(MovementEngine.EnumerateLegalMoves(level,state).Any(m=>m.PieceId=="B"),Is.False);
+            Assert.That(MovementEngine.Apply(level,state,new MoveCommand("A",MoveAxis.Vertical,-2)).Changed,Is.False);
+            state=MovementEngine.Apply(level,state,new MoveCommand("C",MoveAxis.Vertical,2)).State;
+            var b=MovementEngine.Apply(level,state,new MoveCommand("B",MoveAxis.Horizontal,-3));
+            Assert.That(b.ActualDistance,Is.EqualTo(-3),"C, B'nin sol park alanını boşaltır");state=b.State;
+            var a=MovementEngine.Apply(level,state,new MoveCommand("A",MoveAxis.Vertical,-2));
+            Assert.That(a.ActualDistance,Is.EqualTo(-2),"B, A'nın alt alanını açar");state=a.State;
+            state=MovementEngine.Apply(level,state,new MoveCommand("E",MoveAxis.Horizontal,-1)).State;
+            state=MovementEngine.Apply(level,state,new MoveCommand("star",MoveAxis.Horizontal,3)).State;
+            Assert.That(MovementEngine.Apply(level,state,new MoveCommand("star",MoveAxis.Vertical,-5)).Won,Is.False,
+                "E açıldıktan sonra D hâlâ iniş koridorunu keser");
         }
-        [Test] public void LeftParkingIsARealAlternativeRatherThanDecorativeEmptySpace()
+        [Test] public void SingleCellCornerParkingAndSquareManoeuvresAreValid()
         {
             var level=LevelOne.Create(); var state=BoardState.CreateInitial(level);
-            var path=new[]{new MoveCommand("blue",MoveAxis.Vertical,1),new MoveCommand("blue",MoveAxis.Horizontal,2),
-                new MoveCommand("gate",MoveAxis.Vertical,1),new MoveCommand("gate",MoveAxis.Horizontal,-2),
-                new MoveCommand("star",MoveAxis.Horizontal,-3),new MoveCommand("star",MoveAxis.Vertical,-5)};
+            Assert.That(MovementEngine.Apply(level,state,new MoveCommand("F",MoveAxis.Horizontal,1)).Changed,Is.True);
+            Assert.That(MovementEngine.Apply(level,state,new MoveCommand("F",MoveAxis.Vertical,1)).Changed,Is.True);
+            var path=new[]{new MoveCommand("star",MoveAxis.Horizontal,3),new MoveCommand("C",MoveAxis.Vertical,2),
+                new MoveCommand("B",MoveAxis.Horizontal,-3),new MoveCommand("A",MoveAxis.Vertical,-2),
+                new MoveCommand("D",MoveAxis.Vertical,-1),new MoveCommand("D",MoveAxis.Horizontal,-1),
+                new MoveCommand("E",MoveAxis.Horizontal,-1),new MoveCommand("star",MoveAxis.Vertical,-5)};
             foreach(var move in path)
             { var result=MovementEngine.Apply(level,state,move); Assert.That(result.ActualDistance,Is.EqualTo(move.Distance)); state=result.State; }
             Assert.That(MovementEngine.IsWon(level,state),Is.True);
-            Assert.That(path.Length,Is.GreaterThan(BoardSolver.Solve(level,BoardState.CreateInitial(level)).Path.Count),"Alternatif park stratejisi optimum diye sunulmaz");
+            Assert.That(MovementEngine.Position(state,"D"),Is.EqualTo(new Cell(4,1)),"D iki ayrı sürüklemeyle köşeye park eder");
+            Assert.That(path.Length,Is.EqualTo(BoardSolver.Solve(level,BoardState.CreateInitial(level)).Path.Count));
         }
     }
 }

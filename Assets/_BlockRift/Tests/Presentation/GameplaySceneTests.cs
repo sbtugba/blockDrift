@@ -32,7 +32,11 @@ namespace BlockRift.Tests
             Assert.That(root.Find("BoardRoot/PiecesRoot").childCount, Is.EqualTo(BlockRift.Core.LevelOne.Create().Pieces.Count+BlockRift.Core.LevelOne.Create().FixedCells.Count));
             Assert.That(root.Find("BoardRoot/BoardVisualsRoot").childCount, Is.EqualTo(1));
             Assert.That(root.Find("BoardRoot").GetComponentsInChildren<MeshFilter>(true).Length,
-                Is.EqualTo(2+BlockRift.Core.LevelOne.Create().Pieces.Count+BlockRift.Core.LevelOne.Create().FixedCells.Count));
+                Is.EqualTo(3+BlockRift.Core.LevelOne.Create().Pieces.Count+BlockRift.Core.LevelOne.Create().FixedCells.Count));
+            var exit=root.Find("BoardRoot/MarkersRoot/ExitVisual");
+            Assert.That(exit,Is.Not.Null,"Hedef editör sahnesinde de görünür olmalı");
+            var layout=root.Find("BoardRoot").GetComponent<BoardVisualLayout>();
+            Assert.That(exit.position,Is.EqualTo(layout.CellToWorld(BlockRift.Core.LevelOne.Create().Exit)+Vector3.up*.004f));
             var background = root.Find("Background");
             Assert.That(background, Is.Not.Null);
             Assert.That(background.GetComponent<BackgroundSpriteFitter>().enabled, Is.True);
@@ -68,7 +72,7 @@ namespace BlockRift.Tests
             Vector2 max = safe.anchorMin + Vector2.Scale(viewport.anchorMax, safeSpan);
             Assert.That(safe.anchorMin.x, Is.EqualTo(safePixels.xMin / width).Within(0.00001));
             Assert.That(safe.anchorMax.y, Is.EqualTo(safePixels.yMax / height).Within(0.00001));
-            Assert.That(camera.orthographic, Is.False);
+            Assert.That(camera.orthographic, Is.True);
             var board = root.Find("BoardRoot");
             for (int i = 0; i < 8; i++)
             {

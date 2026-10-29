@@ -1,7 +1,7 @@
 {
   "name": "BlockRift.Presentation.EditModeTests",
   "rootNamespace": "BlockRift.Tests",
-  "references": ["BlockRift.Presentation", "BlockRift.Core", "BlockRift.SceneTools", "UnityEngine.UI"],
+  "references": ["BlockRift.Presentation", "BlockRift.Core", "BlockRift.Application", "BlockRift.SceneTools", "UnityEngine.UI"],
   "includePlatforms": ["Editor"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

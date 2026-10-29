@@ -12,7 +12,7 @@ namespace BlockRift.Core
         MissingLevel, InvalidMetadata, InvalidBoardSize, ExitOutsideBoard, InvalidPiece,
         DuplicatePieceId, InvalidTargetCount, InvalidShape, PieceOutsideBoard, Overlap,
         InvalidFixedCell, FixedOnExit, InvalidTriggerCount, InvalidTrigger, TriggerOnExit,
-        OccupiedTrigger, UnstableStart
+        OccupiedTrigger, UnstableStart, UnsupportedRulesVersion
     }
 
     /// <summary>Kesin kural ihlali olmayan, içerik incelemesi gerektiren durumları ayırır.</summary>
@@ -52,6 +52,7 @@ namespace BlockRift.Core
             // IsNullOrWhiteSpace boş veya yalnız boşluk içeren kimlikleri de yakalar.
             if (string.IsNullOrWhiteSpace(level.Id) || level.SchemaVersion < 1 || level.RulesVersion < 1)
                 errors.Add(BoardError.InvalidMetadata);
+            if (level.RulesVersion != MovementEngine.RulesVersion) errors.Add(BoardError.UnsupportedRulesVersion);
             if (!((level.Width == 5 && level.Height == 5) || (level.Width == 6 && level.Height == 6)))
                 errors.Add(BoardError.InvalidBoardSize);
             if (!Inside(level.Exit, level)) errors.Add(BoardError.ExitOutsideBoard);

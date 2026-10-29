@@ -8,12 +8,12 @@ Son düzenleme: **2026-10-28**. Bu düzenleme yalnız dokümantasyon/görseller 
 |---|---|
 | [GAME_DESIGN.md](GAME_DESIGN.md) | Onaylı oyun kurallarının kaynağı. İçeriği değiştirilmedi. |
 | [CONSISTENCY_AUDIT.md](CONSISTENCY_AUDIT.md) | AGENTS.md tarafından kullanılan teknik risk/tarihsel tutarlılık kaydı. İçeriği değiştirilmedi; eski şekil sayısı gibi tarihsel ifadeler güncel GDD'yi geçersiz kılmaz. |
-| [LEVEL1_SPEC.md](LEVEL1_SPEC.md) | Uygulama/kabul kapsamı korunur; eski başlangıç durumu ve uzun blokların dört yön beklentisinin tarihsel olduğu işaretlendi. |
-| [LEVEL1_REPORT.md](LEVEL1_REPORT.md) | Uygulanmış Level 1 yerleşimi, eski Solver/kalite kanıtları ve bakım komutları; yeni hareket kurallarına uygunluk kanıtı değildir. |
+| [LEVEL1_SPEC.md](LEVEL1_SPEC.md) | Küçük Aktarma / rulesVersion 2 uygulama ve kabul sözleşmesi; önceki spec arşivde. |
+| [LEVEL1_REPORT.md](LEVEL1_REPORT.md) | Movement Rules V2, onaylı Level 1, yeni Core minimum/replay, gerçek Game View ve güncel test sonuçları. |
 | [CAMERA_AIM_REPORT.md](CAMERA_AIM_REPORT.md) | Kullanılan kamera kadrajı, ölçümler ve doğrulama komutları. Eski kamera aşaması görselinin yeni arşiv yolu güncellendi. |
 | [Safe Cleanup Phase 1](audits/SAFE_CLEANUP_PHASE1.md) | Son kaynak temizliği, geri alma ve test kanıtları; korunur. |
 
-**Açık durum:** Şekle bağlı yeni hareket kuralları GDD'de onaylandı; Core/Solver ve mevcut Level 1 migration'ı henüz yapılmadı. Bu belge veya arşivleme işlemi migration'ın uygulandığı anlamına gelmez.
+**Güncel durum (2026-10-28):** Movement Rules V2 Core/Solver/Input migration tamamlandı. Onaylı Küçük Aktarma Level 1, yeni Core ile minimum 8 hamlede doğrulanıp Unity'ye bağlandı. Gravity ve diğer kapsam dışı servisler henüz uygulanmadı.
 
 ## Korunan görsel yolları
 
@@ -51,3 +51,7 @@ Tarihsel raporlar, ölçümler ve karşılaştırma görselleri silinmedi. Eski 
 - Tam önceki docs kopyası ve hash/taşıma kayıtları: `TestResults/DocsCleanup_20261028_000819/` (ignored). Önceki kullanıcı değişiklikleri korundu; reset/clean/commit/push yapılmadı.
 - Son Git durumu: **13 değiştirilmiş + 27 silinmiş + 208 untracked = 248**, staged **0**. Başlangıç **13 M + 21 D + 200 U = 234** idi. Altı tracked dosyanın taşınması, stage edilmediği için eski yolda silinmiş/yeni yolda untracked görünür. Önceden root ignore desenine uyan iki tarihsel JSON arşiv konumunda artık untracked görünür; ikisi de korunmuştur. GDD'nin M durumu önceden vardı, bu temizlikte içeriği değiştirilmedi.
 - Daha önce zaten bulunmayan `docs/audits/CODEBASE_CLEANUP_AUDIT.md` yeniden oluşturulmadı; SAFE_CLEANUP_PHASE1 içindeki yokluk kaydı tarihsel açıklama olarak korundu. Taşıma nedeniyle güncellenmesi gereken aktif kod/test referansı kalmadı.
+
+## Movement V2 teslimi
+
+[Eski Level 1 raporu](archive/development/LEVEL1_RULES_V1_REPORT.md), [eski spec](archive/development/LEVEL1_RULES_V1_SPEC.md) ve [V1 görseli](archive/screenshots/Level1_RulesV1_GameView.png) korundu. Yukarıdaki temizlik sayımları temizlik anının kaydıdır; V2 teslimiyle yeni arşiv dosyaları eklendi. Güncel sonuçlar [LEVEL1_REPORT.md](LEVEL1_REPORT.md) içindedir.

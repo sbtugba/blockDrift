@@ -28,9 +28,9 @@ namespace BlockRift.Core
         { Id = id; Kind = kind; Width = width; Height = height; Start = start; }
     }
 
-    /// <summary>GDD'deki dokuz sabit yönelimli dikdörtgeni tek yerde tanımlar; rotasyon üretmez.</summary>
+    /// <summary>GDD'deki sekiz sabit yönelimli dikdörtgeni tek yerde tanımlar; rotasyon üretmez.</summary>
     // static sınıf için new ShapeCatalog() yapılmaz; ShapeCatalog.IsAllowed(2, 2) diye çağrılır.
-    // Bağlantı: BoardValidator şekil kuralını buradan sorar; testler kataloğun tam dokuz şekil içerdiğini doğrular.
+    // Bağlantı: BoardValidator şekil kuralını buradan sorar; katalog tam sekiz şekildir.
     public static class ShapeCatalog
     {
         /// <summary>Boyut çiftinin izinli hareketli engel şekli olup olmadığını söyler.</summary>
@@ -39,6 +39,6 @@ namespace BlockRift.Core
         public static bool IsAllowed(int width, int height) =>
             (width == 1 && height >= 1 && height <= 4) ||
             (height == 1 && width >= 1 && width <= 4) ||
-            (width == 2 && height == 2) || (width == 3 && height == 3);
+            (width == 2 && height == 2);
     }
 }

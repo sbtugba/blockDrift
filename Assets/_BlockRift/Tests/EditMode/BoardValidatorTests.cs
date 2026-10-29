@@ -25,7 +25,7 @@ namespace BlockRift.Tests
         // new[] { ... } ifadesinde derleyici dizi öğelerinin türünü çıkarır.
         private static LevelDefinition Level(int width = 5, int height = 5, PieceDefinition[] pieces = null,
             Cell[] fixedCells = null, Cell[] triggers = null, Cell? exit = null) =>
-            new LevelDefinition("test", 1, 1, width, height, exit ?? new Cell(3, 4),
+            new LevelDefinition("test", 1, 2, width, height, exit ?? new Cell(3, 4),
                 pieces ?? new[] { Target(), Block() }, fixedCells ?? Array.Empty<Cell>(), triggers ?? Array.Empty<Cell>());
         // void, metodun değer döndürmediğini belirtir. Assert.That beklenti tutmazsa testi başarısız yapar.
         // Does.Contain, hata koleksiyonunda istenen kodun bulunmasını ister; başka hatalar da olabilir.
@@ -42,18 +42,18 @@ namespace BlockRift.Tests
         public void OtherSizesAreRejected(int w, int h) => Reject(Level(w, h), BoardError.InvalidBoardSize);
 
         [TestCase(1, 1)] [TestCase(2, 1)] [TestCase(1, 2)] [TestCase(1, 3)] [TestCase(3, 1)]
-        [TestCase(2, 2)] [TestCase(3, 3)] [TestCase(1, 4)] [TestCase(4, 1)]
+        [TestCase(2, 2)] [TestCase(1, 4)] [TestCase(4, 1)]
         public void EveryApprovedShapeIsAccepted(int w, int h) =>
             Assert.That(BoardValidator.Validate(Level(pieces: new[] { Target(), Block(w, h) })).IsValid, Is.True);
 
-        [TestCase(0, 1)] [TestCase(-1, 1)] [TestCase(2, 3)] [TestCase(3, 2)] [TestCase(4, 4)] [TestCase(1, 5)] [TestCase(int.MaxValue, 1)]
+        [TestCase(3, 3)] [TestCase(0, 1)] [TestCase(-1, 1)] [TestCase(2, 3)] [TestCase(3, 2)] [TestCase(4, 4)] [TestCase(1, 5)] [TestCase(int.MaxValue, 1)]
         public void OtherShapesAreRejected(int w, int h) => Reject(Level(pieces: new[] { Target(), Block(w, h) }), BoardError.InvalidShape);
 
         // [Test], parametresiz tek testtir. Range(1, 6) 1..6 değerlerini üretir.
         // Count koşulu sağlayan boyutları sayar; Sum her genişlikteki sayıları toplar.
         // Lambda'daki w/h değişkenleri, her öğe için hesaplamaya verilen geçici değerlerdir.
-        [Test] public void CatalogHasExactlyNineShapes() => Assert.That(
-            Enumerable.Range(1, 6).Sum(w => Enumerable.Range(1, 6).Count(h => ShapeCatalog.IsAllowed(w, h))), Is.EqualTo(9));
+        [Test] public void CatalogHasExactlyEightShapes() => Assert.That(
+            Enumerable.Range(1, 6).Sum(w => Enumerable.Range(1, 6).Count(h => ShapeCatalog.IsAllowed(w, h))), Is.EqualTo(8));
         [Test] public void NullLevelIsRejected() => Reject(null, BoardError.MissingLevel);
         [Test] public void MissingTargetIsRejected() => Reject(Level(pieces: new[] { Block() }), BoardError.InvalidTargetCount);
         [Test] public void TwoTargetsAreRejected() => Reject(Level(pieces: new[] { Target(), new PieceDefinition("t2", PieceKind.Target, 1, 1, new Cell(2, 4)) }), BoardError.InvalidTargetCount);
@@ -79,7 +79,7 @@ namespace BlockRift.Tests
         // Assert.Throws<T>, verilen kodun T türünde istisna üretmesini bekler.
         // () => ... parametresiz lambda'dır; kodu hemen çalıştırmak yerine NUnit'in çalıştırmasına veririz.
         [Test] public void NullCollectionsFailAtConstruction() => Assert.Throws<ArgumentNullException>(() =>
-            new LevelDefinition("test", 1, 1, 5, 5, new Cell(0, 0), null, Array.Empty<Cell>(), Array.Empty<Cell>()));
+            new LevelDefinition("test", 1, 2, 5, 5, new Cell(0, 0), null, Array.Empty<Cell>(), Array.Empty<Cell>()));
         [TestCase(0)] [TestCase(1)] [TestCase(2)]
         public void AllowedTriggerCountsAreAccepted(int count) => Assert.That(BoardValidator.Validate(Level(triggers:
             Enumerable.Range(1, count).Select(x => new Cell(x, 2)).ToArray())).IsValid, Is.True);

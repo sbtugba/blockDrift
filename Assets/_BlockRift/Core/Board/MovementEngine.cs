@@ -27,14 +27,27 @@ namespace BlockRift.Core
     /// <summary>Tetikleyicisiz kuralların tek geçiş kaynağıdır; fizik veya Unity kullanmaz.</summary>
     public static class MovementEngine
     {
+        public const int RulesVersion = 2;
+        /// <summary>Eski/farklı sürümdeki içerik yeni kurallarla sessizce oynatılamaz.</summary>
+        internal static void RequireSupportedRules(LevelDefinition level)
+        {
+            if(level==null) throw new ArgumentNullException(nameof(level));
+            if(level.RulesVersion!=RulesVersion) throw new NotSupportedException("Beklenen rulesVersion=2; içerik yeniden doğrulanmalı.");
+        }
+        /// <summary>Yalnız manuel sürükleme iznidir; gelecekteki otomatik gravity bu filtreden geçmez.</summary>
+        public static bool AllowsManualAxis(PieceDefinition piece,MoveAxis axis) => piece!=null &&
+            ShapeCatalog.IsAllowed(piece.Width,piece.Height) &&
+            (axis==MoveAxis.Horizontal || axis==MoveAxis.Vertical) &&
+            (piece.Width==piece.Height || (piece.Width>piece.Height?axis==MoveAxis.Horizontal:axis==MoveAxis.Vertical));
         /// <summary>Tüm ara hücreleri tarar; kapıda veya ilk engelden önce durur.</summary>
         public static MoveResult Apply(LevelDefinition level, BoardState state, MoveCommand command)
         {
+            RequireSupportedRules(level);
             if (level.Triggers.Count != 0) throw new NotSupportedException("Trigger/cascade henüz uygulanmadı; sessizce atlanamaz.");
             if (command.Axis != MoveAxis.Horizontal && command.Axis != MoveAxis.Vertical) throw new ArgumentOutOfRangeException(nameof(command));
             bool won=IsWon(level,state);
             var piece=level.Pieces.FirstOrDefault(p=>p.Id==command.PieceId);
-            if (won || piece==null || command.Distance==0) return new MoveResult(state,false,won,0);
+            if (won || piece==null || command.Distance==0 || !AllowsManualAxis(piece,command.Axis)) return new MoveResult(state,false,won,0);
             Cell start=Position(state,piece.Id), end=start;
             int sign=Math.Sign(command.Distance), distance=0;
             // Tahta çapından uzun istekler de sabit zamanda sınırda kesilir; int.MinValue taşmaz.
@@ -58,6 +71,7 @@ namespace BlockRift.Core
         /// <summary>Solver yalnız gerçek yer değiştiren ortak geçişleri kullanır.</summary>
         public static IEnumerable<MoveCommand> EnumerateLegalMoves(LevelDefinition level,BoardState state)
         {
+            RequireSupportedRules(level);
             foreach(var piece in level.Pieces)
             foreach(MoveAxis axis in new[]{MoveAxis.Horizontal,MoveAxis.Vertical})
             foreach(int sign in new[]{-1,1})

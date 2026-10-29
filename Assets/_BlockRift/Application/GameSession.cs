@@ -1,4 +1,5 @@
 using BlockRift.Core;
+using System;
 
 namespace BlockRift.App
 {
@@ -9,12 +10,16 @@ namespace BlockRift.App
         public BoardState State { get; private set; }
         public int MoveCount { get; private set; }
         public bool Won => MovementEngine.IsWon(Level,State);
+        /// <summary>Core kazanmaya geçtiğinde oturum kimliğini bildirir; ilerleme ve dosya işi burada yapılmaz.</summary>
+        public event Action<GameSession> WonCommitted;
         public GameSession(LevelDefinition level) { Level=level; Restart(); }
         /// <summary>Gerçek yer değiştirmeyi bir kez sayar; NO_OP ve terminal input sayılmaz.</summary>
         public MoveResult Commit(MoveCommand command)
         {
+            bool wasWon=Won;
             var result=Preview(command);
             if(result.Changed) { State=result.State; MoveCount++; }
+            if(!wasWon&&Won) WonCommitted?.Invoke(this);
             return result;
         }
         /// <summary>Sürükleme önizlemesi oturum durumuna yazmaz.</summary>

@@ -34,11 +34,11 @@ namespace BlockRift.Editor
             if (active.isDirty) throw new InvalidOperationException("Önce mevcut sahne değişikliklerini kaydedin. Sahne ezilmedi.");
             // Diskten aktarılan prefab'lar, açık editörün AssetDatabase'ine girmeden sahne açılamaz.
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            foreach (string path in new[] { GameplayArtIntegration.Models.TrimEnd('/'), GameplayArtIntegration.Materials.TrimEnd('/'),
-                GameplayArtIntegration.Prefabs.TrimEnd('/'), "Assets/_BlockRift/Content" })
+            foreach (string path in new[] { GameplayArtAssets.Models.TrimEnd('/'), GameplayArtAssets.Materials.TrimEnd('/'),
+                GameplayArtAssets.Prefabs.TrimEnd('/'), "Assets/_BlockRift/Content" })
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
-            var catalog = AssetDatabase.LoadAssetAtPath<VisualPrefabCatalog>(GameplayArtIntegration.CatalogPath);
-            if (!catalog || catalog.Entries.Count != 8) throw new InvalidOperationException("Entegre görsel katalog henüz import edilmedi.");
+            var catalog = AssetDatabase.LoadAssetAtPath<VisualPrefabCatalog>(GameplayArtAssets.CatalogPath);
+            if (!catalog || catalog.Entries.Count < 8) throw new InvalidOperationException("Entegre görsel katalog henüz import edilmedi.");
             int expectedMeshes = 0;
             foreach (var entry in catalog.Entries)
             {
@@ -55,6 +55,8 @@ namespace BlockRift.Editor
                 expectedMeshes+=level.Pieces.Sum(p=>catalog.Entries.First(e=>!e.IsBoard &&
                     e.AssetId==(p.Kind==BlockRift.Core.PieceKind.Target?"Special_1x1_Star":"Block_"+p.Width+"x"+p.Height)).Prefab.GetComponentsInChildren<MeshFilter>().Length);
                 expectedMeshes+=level.FixedCells.Count*catalog.Entries.First(e=>e.AssetId=="Obstacle_1x1_Stone").Prefab.GetComponentsInChildren<MeshFilter>().Length;
+                var markers=board.Find("MarkersRoot");
+                if(markers) expectedMeshes+=markers.GetComponentsInChildren<MeshFilter>().Length;
             }
             if (!board || board.GetComponentsInChildren<MeshFilter>().Length != expectedMeshes)
                 throw new InvalidOperationException("Game View yakalanmadı: katalogdaki gerçek mesh'ler sahneye bağlanamadı.");

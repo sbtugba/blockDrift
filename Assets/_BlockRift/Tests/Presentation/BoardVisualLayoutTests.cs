@@ -64,7 +64,7 @@ namespace BlockRift.Tests
                     Assert.That(grid.PieceBaseCenter(new Cell(x, y), width, height), Is.EqualTo(average / (width * height)));
                 }
             }
-            Assert.That(shapes, Is.EqualTo(9));
+            Assert.That(shapes, Is.EqualTo(8));
         }
 
         [Test] public void InvalidVisualCoordinatesAndNonFiniteHeightAreRejected()

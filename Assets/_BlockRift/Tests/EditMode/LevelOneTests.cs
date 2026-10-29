@@ -16,7 +16,7 @@ namespace BlockRift.Tests
             var proof = BoardSolver.Solve(level, BoardState.CreateInitial(level), 100000);
             Assert.That(proof.Status, Is.EqualTo(SearchStatus.Solved));
             // Hamle kotası değil; offline BFS ile ölçülen sürümün regresyon kanıtıdır.
-            Assert.That(proof.Path.Count, Is.EqualTo(5), "İyileştirilmiş Level 1 minimum kanıtı");
+            Assert.That(proof.Path.Count, Is.EqualTo(8), "Küçük Aktarma rulesVersion 2 minimum kanıtı");
             Assert.That(proof.Path.Any(m => m.PieceId != "star"), Is.True);
             var state = BoardState.CreateInitial(level);
             foreach (var move in proof.Path) state = MovementEngine.Apply(level,state,move).State;

@@ -53,3 +53,37 @@ MonoBehaviour:
     height: 6
     board: 1
     prefab: {fileID: 3654418414016036287, guid: aacb4bf0c0d533f438969d837b95be2e, type: 3}
+  - assetId: Block_1x2
+    width: 1
+    height: 2
+    board: 0
+    prefab: {fileID: 2362362467838953153, guid: e7f5b44db6252ca4a97ecf385ba7fa45, type: 3}
+  - assetId: Block_1x3
+    width: 1
+    height: 3
+    board: 0
+    prefab: {fileID: 1814263295575575945, guid: 95768f070362c1e4d9d1a429bcfb3099, type: 3}
+  - assetId: Block_1x4
+    width: 1
+    height: 4
+    board: 0
+    prefab: {fileID: 7778059204721780647, guid: 780f26ff5442db14ab23449350bfef74, type: 3}
+  - assetId: Board_5x5
+    width: 5
+    height: 5
+    board: 1
+    prefab: {fileID: 4171193296275442152, guid: 4f2811378afb2c64d83f4ed9b5994c92, type: 3}
+  colors:
+  - key: blue
+    material: {fileID: 2100000, guid: bc78911e0f124e14ea2f69459136ab30, type: 2}
+  - key: green
+    material: {fileID: 2100000, guid: 9ce2ad6a3bbbc4c40b21c84af6da747d, type: 2}
+  - key: red
+    material: {fileID: 2100000, guid: e8cd13fdfddf06d4a8c75966b1dd9dfe, type: 2}
+  - key: yellow
+    material: {fileID: 2100000, guid: 5e621b779e0a16d438c7ee4f792329f0, type: 2}
+  - key: purple
+    material: {fileID: 2100000, guid: 507f85a69b26ac64d9b32e9cc242d615, type: 2}
+  - key: orange
+    material: {fileID: 2100000, guid: f78830323ec94384799a2007fec054ee, type: 2}
+  exitPrefab: {fileID: 576140412316702267, guid: f6537a947b0d0f9488035dba6a20e574, type: 3}

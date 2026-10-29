@@ -36,14 +36,16 @@ namespace BlockRift.Tests
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Art + "Prefabs/Gameplay/" + modelId + ".prefab");
             Assert.That(prefab, Is.Not.Null);
             Assert.That(prefab.transform.localScale, Is.EqualTo(Vector3.one));
-            Bounds bounds = BlockRift.Editor.GameplayArtIntegration.MeasureBounds(prefab.transform);
+            Bounds bounds = BlockRift.Editor.GameplayArtAssets.MeasureBounds(id == "Board_6x6" ? prefab.transform.Find("Cells") : prefab.transform);
             bool valid = id == "Board_6x6" ? VisualModelChecks.ValidateBoardBounds(bounds, 6, out var issue)
                 : VisualModelChecks.ValidatePieceBounds(bounds, width, height, out issue);
             Assert.That(valid, Is.True, issue);
             foreach (var filter in prefab.GetComponentsInChildren<MeshFilter>(true))
             {
                 Assert.That(filter.sharedMesh.vertexCount, Is.GreaterThan(100));
-                Assert.That(AssetDatabase.GetAssetPath(filter.sharedMesh), Does.EndWith("/Gameplay/" + modelId + ".fbx"));
+                string source = id == "Board_6x6" ? (filter.transform.IsChildOf(prefab.transform.Find("Sand")) ? "Sand_BoardTransition_6x6" : "Board_6x6_Cells")
+                    : new[]{"Block_2x1","Block_3x1","Block_4x1","Block_2x2"}.Contains(id) ? id+"_Unified" : modelId;
+                Assert.That(AssetDatabase.GetAssetPath(filter.sharedMesh), Does.EndWith("/Gameplay/" + source + ".fbx"));
                 Assert.That(filter.sharedMesh.normals.Length, Is.EqualTo(filter.sharedMesh.vertexCount));
                 Assert.That(filter.sharedMesh.tangents.Length, Is.EqualTo(filter.sharedMesh.vertexCount));
                 foreach (var uv in filter.sharedMesh.uv) Assert.That(float.IsNaN(uv.x) || float.IsNaN(uv.y), Is.False);
@@ -55,19 +57,37 @@ namespace BlockRift.Tests
                 Assert.That(material.shader.name, Is.EqualTo("Universal Render Pipeline/Lit"));
                 Assert.That(AssetDatabase.GetAssetPath(material), Does.StartWith(Art + "Materials/Gameplay/"));
             }
-            var importer = (ModelImporter)AssetImporter.GetAtPath(Art + "Models/Gameplay/" + modelId + ".fbx");
+            string importId=id=="Board_6x6"?"Board_6x6_Cells":new[]{"Block_2x1","Block_3x1","Block_4x1","Block_2x2"}.Contains(id)?id+"_Unified":modelId;
+            var importer = (ModelImporter)AssetImporter.GetAtPath(Art + "Models/Gameplay/" + importId + ".fbx");
             Assert.That(importer.globalScale, Is.EqualTo(1));
             Assert.That(importer.importNormals, Is.EqualTo(ModelImporterNormals.Import));
             Assert.That(importer.addCollider, Is.False);
         }
 
-        [Test] public void CatalogHasOnlyRequestedAssetsAndNoFakeFiveByFiveBoard()
+        [TestCase(2)] [TestCase(3)] [TestCase(4)]
+        public void VerticalPrefabUsesSameApprovedMeshAtUnitScale(int length)
+        {
+            var catalog=root.Find("BoardRoot").GetComponent<BoardVisualLayout>().VisualCatalog;
+            Assert.That(catalog.TryGetPiece("Block_1x"+length,out var vertical),Is.True);
+            Assert.That(catalog.TryGetPiece("Block_"+length+"x1",out var horizontal),Is.True);
+            Assert.That(vertical.Width,Is.EqualTo(1));Assert.That(vertical.Height,Is.EqualTo(length));
+            var bounds=BlockRift.Editor.GameplayArtAssets.MeasureBounds(vertical.Prefab.transform);
+            Assert.That(VisualModelChecks.ValidatePieceBounds(bounds,1,length,out var issue),Is.True,issue);
+            Assert.That(vertical.Prefab.transform.localRotation,Is.EqualTo(Quaternion.identity));
+            foreach(var transform in vertical.Prefab.GetComponentsInChildren<Transform>(true))
+                Assert.That(transform.localScale,Is.EqualTo(Vector3.one),"Ölçek hilesi yok");
+            CollectionAssert.AreEquivalent(horizontal.Prefab.GetComponentsInChildren<MeshFilter>(true).Select(f=>f.sharedMesh),
+                vertical.Prefab.GetComponentsInChildren<MeshFilter>(true).Select(f=>f.sharedMesh),"Aynı FBX mesh'leri; yeni geometri yok");
+        }
+        [Test] public void CatalogContainsBothActualBoardSizesWithoutScaling()
         {
             var layout = root.Find("BoardRoot").GetComponent<BoardVisualLayout>();
             Assert.That(layout.VisualCatalog, Is.Not.Null);
-            Assert.That(layout.VisualCatalog.Entries.Count, Is.EqualTo(8));
+            Assert.That(layout.VisualCatalog.Entries.Count, Is.EqualTo(12));
             Assert.That(layout.VisualCatalog.TryGetBoard(6, out _), Is.True);
-            Assert.That(layout.VisualCatalog.TryGetBoard(5, out _), Is.False);
+            Assert.That(layout.VisualCatalog.TryGetBoard(5, out var five), Is.True);
+            Assert.That(five.Prefab.transform.localScale,Is.EqualTo(Vector3.one));
+            Assert.That(BlockRift.Editor.GameplayArtAssets.MeasureBounds(five.Prefab.transform.Find("Cells")).size.x,Is.EqualTo(4.97f).Within(.0001f));
             Assert.That(layout.VisualCatalog.TryGetPiece("missing-model", out _), Is.False);
             Assert.That(new BoardGridLayout(5).CellCenter(new Cell(0, 0)), Is.EqualTo(new Vector3(-2,0,-2)));
         }
@@ -78,7 +98,7 @@ namespace BlockRift.Tests
             var layout = boardRoot.GetComponent<BoardVisualLayout>();
             var pieces = boardRoot.Find("PiecesRoot");
             var board = boardRoot.Find("BoardVisualsRoot").GetChild(0);
-            Bounds boardBounds = BlockRift.Editor.GameplayArtIntegration.MeasureBounds(board);
+            Bounds boardBounds = BlockRift.Editor.GameplayArtAssets.MeasureBounds(board.Find("Cells"));
             Assert.That(boardBounds.max.y, Is.EqualTo(-0.001f).Within(0.00001));
             var occupied = new HashSet<Cell>(); var allBounds = new List<Bounds>();
             foreach (Transform view in pieces)
@@ -91,7 +111,7 @@ namespace BlockRift.Tests
                     PieceKind.Obstacle, entry.Width, entry.Height, new Cell(x,y)), new Cell(x,y))));
                 for (int py = 0; py < entry.Height; py++) for (int px = 0; px < entry.Width; px++)
                 { Assert.That(x+px, Is.InRange(0,5)); Assert.That(y+py, Is.InRange(0,5)); Assert.That(occupied.Add(new Cell(x+px,y+py)), Is.True); }
-                Bounds local = BlockRift.Editor.GameplayArtIntegration.MeasureBounds(view);
+                Bounds local = BlockRift.Editor.GameplayArtAssets.MeasureBounds(view);
                 var bounds = new Bounds(local.center + view.localPosition, local.size);
                 Assert.That(bounds.min.y - boardBounds.max.y, Is.GreaterThan(0.0009f));
                 Assert.That(bounds.min.x, Is.GreaterThanOrEqualTo(-3.00001f));
@@ -136,6 +156,8 @@ namespace BlockRift.Tests
             Vector2 min=safe.anchorMin+Vector2.Scale(area.anchorMin,span), max=safe.anchorMin+Vector2.Scale(area.anchorMax,span);
             foreach (var renderer in root.Find("BoardRoot").GetComponentsInChildren<MeshRenderer>())
             {
+                // Kum kadrajı doldurur; yalnız hücreler/parçalar ayrılmış oynanış alanına sığmalıdır.
+                if(renderer.transform.GetComponentsInParent<Transform>().Any(t=>t.name=="Sand"))continue;
                 var bounds=renderer.bounds;
                 for(int i=0;i<8;i++)
                 {

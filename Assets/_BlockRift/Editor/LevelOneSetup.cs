@@ -30,14 +30,12 @@ namespace BlockRift.Editor
             var palette=AssetDatabase.LoadAssetAtPath<LevelVisualPalette>("Assets/_BlockRift/Content/LevelOnePalette.asset");
             if(!palette) { palette=ScriptableObject.CreateInstance<LevelVisualPalette>(); AssetDatabase.CreateAsset(palette,"Assets/_BlockRift/Content/LevelOnePalette.asset"); }
             string[] names={"Blue","Green","Red","Yellow","Purple","Orange"};
-            string[] hex={"#168BFF","#22D94F","#FF4747","#FFD231","#963EFF","#FF9E28"};
             palette.colors=new Material[6];
-            for(int i=0;i<6;i++) palette.colors[i]=Material("BR_Plastic_"+names[i],hex[i],.78f);
-            palette.pieces=new[]{new LevelVisualPalette.Binding{pieceId="star",assetId="Special_1x1_Star"},
-                new LevelVisualPalette.Binding{pieceId="gate",assetId="Block_2x2",material=palette.colors[1]},
-                new LevelVisualPalette.Binding{pieceId="blue",assetId="Block_3x1",material=palette.colors[0]}};
-            var cyan=Material("BR_Exit_Cyan","#20E4DD",.75f); cyan.EnableKeyword("_EMISSION"); cyan.SetColor("_EmissionColor",new Color(0,.35f,.3f));
-            string exitPath=GameplayArtIntegration.Prefabs+"Exit_Cell.prefab";
+            for(int i=0;i<6;i++) palette.colors[i]=RequireMaterial("BR_Plastic_"+names[i]);
+            EnsureVerticalPrefabs(AssetDatabase.LoadAssetAtPath<VisualPrefabCatalog>(GameplayArtAssets.CatalogPath));
+            BindApprovedPalette(palette);
+            var cyan=RequireMaterial("BR_Exit_Cyan");
+            string exitPath=GameplayArtAssets.Prefabs+"Exit_Cell.prefab";
             var exit=GameObject.CreatePrimitive(PrimitiveType.Quad); exit.name="Exit_Cell";
             UnityEngine.Object.DestroyImmediate(exit.GetComponent<Collider>());
             exit.transform.rotation=Quaternion.Euler(90,0,0); exit.transform.localScale=Vector3.one*.88f;
@@ -80,9 +78,9 @@ namespace BlockRift.Editor
             { var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule)); events.transform.SetParent(root.transform,false); }
             var controller=root.GetComponent<LevelOneGameplay>(); if(!controller) controller=root.AddComponent<LevelOneGameplay>();
             var data=new SerializedObject(controller);
+            data.FindProperty("levelId").stringValue=level.Id;
             data.FindProperty("layout").objectReferenceValue=layout;
             data.FindProperty("gameplayCamera").objectReferenceValue=root.GetComponentInChildren<Camera>();
-            data.FindProperty("palette").objectReferenceValue=palette;
             data.FindProperty("movesLabel").objectReferenceValue=moves;
             data.FindProperty("winLabel").objectReferenceValue=win;
             data.FindProperty("restartButton").objectReferenceValue=restartObject.GetComponent<Button>();
@@ -99,9 +97,18 @@ namespace BlockRift.Editor
             if(!UnityEngine.Application.isBatchMode) throw new InvalidOperationException("Batch bakım girişi");
             var level=LevelOne.Create();
             if(!BoardValidator.Validate(level).IsValid) throw new InvalidOperationException("Geçersiz bölüm");
+            var initial=BoardState.CreateInitial(level);var proof=BoardSolver.Solve(level,initial);
+            if(proof.Status!=SearchStatus.Solved||proof.RulesVersion!=MovementEngine.RulesVersion)
+                throw new InvalidOperationException("Bölüm kanıtı tamamlanmadı: "+proof.Status);
+            var replay=initial;
+            foreach(var move in proof.Path)
+            { var result=MovementEngine.Apply(level,replay,move);if(result.ActualDistance!=move.Distance)throw new InvalidOperationException("Replay mesafe hatası");replay=result.State; }
+            if(!MovementEngine.IsWon(level,replay))throw new InvalidOperationException("Replay kazanmadı");
             var palette=AssetDatabase.LoadAssetAtPath<LevelVisualPalette>("Assets/_BlockRift/Content/LevelOnePalette.asset");
-            palette.pieces.Single(b=>b.pieceId=="gate").assetId="Block_2x2";
-            palette.pieces.Single(b=>b.pieceId=="blue").assetId="Block_3x1";
+            var catalog=AssetDatabase.LoadAssetAtPath<VisualPrefabCatalog>(GameplayArtAssets.CatalogPath);
+            EnsureVerticalPrefabs(catalog);
+            // Mevcut URP materyalleri paylaşılır; kaynak materyaller yeniden yazılmaz.
+            BindApprovedPalette(palette);
             EditorUtility.SetDirty(palette);
             var scene=EditorSceneManager.OpenScene(GameplaySceneSetup.ScenePath,OpenSceneMode.Single);
             var layout=scene.GetRootGameObjects()[0].GetComponentInChildren<BoardVisualLayout>();
@@ -123,16 +130,66 @@ namespace BlockRift.Editor
                 var view=(GameObject)PrefabUtility.InstantiatePrefab(stone.Prefab,scene); view.name="Obstacle_1x1_Stone";
                 layout.PlacePieceView(view.transform,new PieceDefinition("fixed",PieceKind.Obstacle,1,1,cell),cell);
             }
+            var markers=layout.transform.Find("MarkersRoot");
+            var exit=markers.Find("ExitVisual");
+            if(!exit) { exit=((GameObject)PrefabUtility.InstantiatePrefab(palette.exitPrefab,scene)).transform;exit.name="ExitVisual";exit.SetParent(markers,false); }
+            exit.position=layout.CellToWorld(level.Exit)+Vector3.up*.004f;
             AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
+            Directory.CreateDirectory("TestResults/MovementV2");
+            File.WriteAllText("TestResults/MovementV2/solver.txt",$"RulesVersion={proof.RulesVersion}\nStatus={proof.Status}\nMinimum={proof.Path.Count}\nVisited={proof.VisitedStates}\nReplay=WIN\n"+
+                string.Join("\n",proof.Path.Select(m=>$"{m.PieceId} {m.Axis} {m.Distance}")));
             Debug.Log("LEVEL_ONE_LAYOUT_REFRESHED: existing assets and camera preserved");
         }
-        private static Material Material(string name,string hex,float smoothness)
+        private static void BindApprovedPalette(LevelVisualPalette palette)
         {
-            string path=GameplayArtIntegration.Materials+name+".mat";
+            palette.pieces=new[]{
+                new LevelVisualPalette.Binding{pieceId="star",assetId="Special_1x1_Star"},
+                new LevelVisualPalette.Binding{pieceId="A",assetId="Block_1x3",material=palette.colors[0]},
+                new LevelVisualPalette.Binding{pieceId="B",assetId="Block_3x1",material=palette.colors[1]},
+                new LevelVisualPalette.Binding{pieceId="C",assetId="Block_1x2",material=palette.colors[3]},
+                new LevelVisualPalette.Binding{pieceId="D",assetId="Block_1x1",material=palette.colors[2]},
+                new LevelVisualPalette.Binding{pieceId="E",assetId="Block_2x1",material=palette.colors[4]},
+                new LevelVisualPalette.Binding{pieceId="F",assetId="Block_2x2",material=palette.colors[5]}};
+        }
+        // Oyuncu rotasyonu değildir: onaylı FBX'in aynı mesh'ini sabit yönelimli yeni prefab'da kullanır.
+        // Kaynak mesh/FBX değişmez, ölçek her katmanda 1 kalır; yalnız model çocuğu Y'de 90° yönelir.
+        private static void EnsureVerticalPrefabs(VisualPrefabCatalog catalog)
+        {
+            foreach(int length in new[]{2,3,4})
+            {
+                string id="Block_1x"+length;
+                if(catalog.TryGetPiece(id,out var existing))
+                {
+                    if(!VisualModelChecks.ValidatePieceBounds(GameplayArtAssets.MeasureBounds(existing.Prefab.transform),1,length,out var error))
+                        throw new InvalidOperationException(id+": "+error);
+                    continue;
+                }
+                if(!catalog.TryGetPiece("Block_"+length+"x1",out var source))throw new InvalidOperationException("Kaynak FBX prefab yok: "+id);
+                var wrapper=new GameObject(id);
+                try
+                {
+                    var model=(GameObject)PrefabUtility.InstantiatePrefab(source.Prefab);
+                    model.transform.SetParent(wrapper.transform,false);model.transform.localRotation=Quaternion.Euler(0,90,0);
+                    if(!VisualModelChecks.ValidatePieceBounds(GameplayArtAssets.MeasureBounds(wrapper.transform),1,length,out var error))
+                        throw new InvalidOperationException(id+": "+error);
+                    var prefab=PrefabUtility.SaveAsPrefabAsset(wrapper,GameplayArtAssets.Prefabs+id+".prefab");
+                    var data=new SerializedObject(catalog);var entries=data.FindProperty("entries");int index=entries.arraySize;entries.InsertArrayElementAtIndex(index);
+                    var entry=entries.GetArrayElementAtIndex(index);
+                    entry.FindPropertyRelative("assetId").stringValue=id;
+                    entry.FindPropertyRelative("width").intValue=1;entry.FindPropertyRelative("height").intValue=length;
+                    entry.FindPropertyRelative("board").boolValue=false;entry.FindPropertyRelative("prefab").objectReferenceValue=prefab;
+                    data.ApplyModifiedPropertiesWithoutUndo();EditorUtility.SetDirty(catalog);
+                }
+                finally { UnityEngine.Object.DestroyImmediate(wrapper); }
+            }
+        }
+        /// <summary>Mevcut sanat materyalini yalnız okur; oluşturma ve düzenleme ApprovedAssetMigration sorumluluğudur.</summary>
+        private static Material RequireMaterial(string name)
+        {
+            string path=GameplayArtAssets.Materials+name+".mat";
             var mat=AssetDatabase.LoadAssetAtPath<Material>(path);
-            if(!mat) { mat=new Material(Shader.Find("Universal Render Pipeline/Lit")); AssetDatabase.CreateAsset(mat,path); }
-            ColorUtility.TryParseHtmlString(hex,out var color); mat.SetColor("_BaseColor",color);
-            mat.SetFloat("_Metallic",0); mat.SetFloat("_Smoothness",smoothness); EditorUtility.SetDirty(mat); return mat;
+            if(!mat) throw new InvalidOperationException("Mevcut materyal eksik: "+path+". Güncel sanat entegrasyonunu doğrulayın.");
+            return mat;
         }
         private static Text Label(Transform parent,string name,Vector2 min,Vector2 max,int size)
         {

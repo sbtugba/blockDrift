@@ -26,30 +26,28 @@ namespace BlockRift.Tests
         public void CameraLooksAtGeometryCenterFromAboveAndRetainsUiSpace(int size,int width,int height)
         {
             var board=root.Find("BoardRoot");
-            var poses=new Dictionary<Transform,Matrix4x4>();
-            foreach(var transform in board.GetComponentsInChildren<Transform>())poses[transform]=transform.localToWorldMatrix;
             var framing=root.GetComponentInChildren<GameplayViewportLayout>();
             var camera=root.GetComponentInChildren<Camera>();
             board.GetComponent<BoardVisualLayout>().SetBoardSize(size);
+            var poses=new Dictionary<Transform,Matrix4x4>();
+            foreach(var transform in board.GetComponentsInChildren<Transform>())poses[transform]=transform.localToWorldMatrix;
             framing.ApplyLayout(width,height,new Rect(0,0,width,height));
             Vector3 target=framing.FocusPoint;
-            Assert.That(camera.orthographic,Is.False);
+            Assert.That(camera.orthographic,Is.True);
             Assert.That(camera.transform.position.y,Is.GreaterThan(target.y));
             Assert.That(camera.transform.forward.y,Is.LessThan(0));
-            Assert.That(Vector3.Dot(camera.transform.forward,(target-camera.transform.position).normalized),Is.GreaterThan(.99999f));
-            Assert.That(Quaternion.Angle(camera.transform.rotation,Quaternion.LookRotation(target-camera.transform.position,Vector3.up)),Is.LessThan(.001));
-            Assert.That(camera.transform.eulerAngles.x,Is.InRange(70f,80f));
+            Assert.That(Vector3.Dot(camera.transform.forward,Vector3.down),Is.GreaterThan(.99999f));
+            Assert.That(camera.transform.eulerAngles.x,Is.EqualTo(90f).Within(.001));
             Assert.That(Mathf.DeltaAngle(camera.transform.eulerAngles.y,0),Is.EqualTo(0).Within(.001));
             Assert.That(Mathf.DeltaAngle(camera.transform.eulerAngles.z,0),Is.EqualTo(0).Within(.001));
-            var actual=BlockRift.Editor.GameplayArtIntegration.MeasureBounds(board.Find("BoardVisualsRoot").GetChild(0));
-            Assert.That(Vector3.Distance(target,board.TransformPoint(actual.center)),Is.LessThan(.00001));
+            Assert.That(Vector3.Distance(target,board.TransformPoint(new Vector3(0,board.GetComponent<BoardVisualLayout>().Grid.SurfaceHeight,0))),Is.LessThan(.00001));
             float half=size*.5f;
             Vector3 frontA=camera.WorldToViewportPoint(board.TransformPoint(new Vector3(-half,0,-half)));
             Vector3 frontB=camera.WorldToViewportPoint(board.TransformPoint(new Vector3(half,0,-half)));
             Vector3 backA=camera.WorldToViewportPoint(board.TransformPoint(new Vector3(-half,0,half)));
             Vector3 backB=camera.WorldToViewportPoint(board.TransformPoint(new Vector3(half,0,half)));
             float ratio=(backB.x-backA.x)/(frontB.x-frontA.x);
-            Assert.That(ratio,Is.InRange(.94f,1.01f),"Üst/alt kenar farkı hafif perspective sınırında kalmalı");
+            Assert.That(ratio,Is.EqualTo(1).Within(.00001f),"Tam üstten görünümde karşı kenarlar eşit olmalı");
             foreach(var item in poses)Assert.That(item.Key.localToWorldMatrix,Is.EqualTo(item.Value));
         }
 
@@ -59,7 +57,7 @@ namespace BlockRift.Tests
             framing.ApplyLayout(1080,1920,new Rect(0,0,1080,1920));
             var camera=root.GetComponentInChildren<Camera>();
             float min=1,max=0,minY=1,maxY=0;
-            foreach(var filter in root.Find("BoardRoot/BoardVisualsRoot").GetComponentsInChildren<MeshFilter>())
+            foreach(var filter in root.Find("BoardRoot/BoardVisualsRoot").GetChild(0).Find("Cells").GetComponentsInChildren<MeshFilter>())
             foreach(var vertex in filter.sharedMesh.vertices)
             {
                 var point=camera.WorldToViewportPoint(filter.transform.TransformPoint(vertex));

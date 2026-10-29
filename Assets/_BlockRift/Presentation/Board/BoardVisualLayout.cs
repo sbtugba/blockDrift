@@ -14,6 +14,7 @@ namespace BlockRift.Presentation
         [SerializeField] private Transform piecesRoot;
         [SerializeField] private GameplayViewportLayout viewportLayout;
         [SerializeField] private VisualPrefabCatalog visualCatalog;
+        [SerializeField] private GameObject activeBoardPrefab;
         public VisualPrefabCatalog VisualCatalog => visualCatalog;
 
         public BoardGridLayout Grid => new BoardGridLayout(boardSize, surfaceHeight);
@@ -33,7 +34,26 @@ namespace BlockRift.Presentation
         {
             _ = new BoardGridLayout(size, surfaceHeight);
             boardSize = size;
+            RefreshBoardView();
             if (viewportLayout) viewportLayout.RefreshLayout();
+        }
+
+        /// <summary>Gerçek 5×5/6×6 hücre ve kum prefabını seçer; grid veya parça geometrisini ölçeklemez.</summary>
+        private void RefreshBoardView()
+        {
+            if (!boardVisualsRoot || !visualCatalog || !visualCatalog.TryGetBoard(boardSize, out var entry)) return;
+            if (activeBoardPrefab == entry.Prefab && boardVisualsRoot.childCount == 1) return;
+            for (int i = boardVisualsRoot.childCount - 1; i >= 0; i--)
+            {
+                var old = boardVisualsRoot.GetChild(i).gameObject;
+                old.SetActive(false);
+                // Eski runtime görseli aynı karede input/render kapsamından çıkar; asset dosyası silinmez.
+                if (Application.isPlaying) Destroy(old); else DestroyImmediate(old);
+            }
+            var view = Instantiate(entry.Prefab, boardVisualsRoot);
+            view.name = entry.Prefab.name;
+            view.transform.localPosition = new Vector3(0, surfaceHeight, 0);
+            activeBoardPrefab = entry.Prefab;
         }
 
         /// <summary>Hücre merkezini birim ölçekli BoardRoot üzerinden dünya koordinatına dönüştürür.</summary>

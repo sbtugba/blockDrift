@@ -1,179 +1,167 @@
-# Block Rift — bağımsız Level 1 tasarım challenge raporu
+# Block Rift — Movement Rules V2 ve Küçük Aktarma
 
-> Durum (2026-10-28): Bu belge uygulanmış eski `rulesVersion=1` bölümünü ve o tarihteki testleri kaydeder. Yeni şekle bağlı hareket kurallarına geçiş henüz yapılmadı; buradaki çözüm güncel GDD kuralları için kanıt değildir.
+**2026-10-28: uygulandı ve doğrulandı.** Kullanıcının onayladığı koordinatlar değiştirilmeden Küçük Aktarma mevcut Gameplay sahnesine bağlandı. GDD/skill, kamera/arka plan/board geometrisi ve Blender kaynakları değiştirilmedi. Commit/push yapılmadı.
 
-27 Ekim 2026. Önceki orta-duvar düzeni kaldırıldı; yeni Level 1 **Hedef Cebi** olarak bağımsız tasarlandı. Block-rift-level-design skill'i tasarım değerlendirmesinde, level-generator skill'i teknik kanıt sözleşmesinde kullanıldı. GDD §§3–4, 5, 7, 10–11 ve başlangıç kararlılığı §13.1 korundu. Tahta boyutu, blok sayısı veya hamle sayısı için önceden bir zorluk kotası konulmadı.
+## Core, Input ve sürüm değişiklikleri
 
-## 1. Referansla ilişki ve bağımsızlık
+GDD §3.3–4 (sekiz şekil/manuel yönler), §5 (gravity ayrımı), §10 (offline exact proof), §13.1 (başlangıç kararlılığı) esas alındı. Architecture/gameplay/level-generator/level-design ve Unity C#/Input skill'leri uygulandı. Mimari skill'deki eski dokuz şekil/orthographic önerileri yerine güncel GDD ve kullanıcı perspective kararı korundu. İstenen CODEBASE_CLEANUP_AUDIT.md diskte bulunmadı; M1–M7 bulguları önceki kayıtlardan mevcut kodda yeniden kontrol edildi.
 
-Referans yalnız alan kullanımı, farklı şekiller ve planlama kalitesi için incelendi. Referanstaki beş hareketli engel kombinasyonu, dikey uzun bloklar, yıldız (0,5), hedef (5,4), taşlar (1,5)/(5,3) veya çözüm sırası alınmadı. Görseldeki “Min. 9” etiketi doğrulanmış bir Solver sonucu veya tasarım hedefi sayılmadı.
+| Parça | Manuel izin |
+|---|---|
+| 1×1, 2×2, yıldız | Dört yön |
+| 2×1, 3×1, 4×1 | Yalnız yatay |
+| 1×2, 1×3, 1×4 | Yalnız dikey |
+| 3×3 | Geçersiz |
 
-Seçilen tasarımda yıldız (5,5), görünür hedef (2,0), 2×2 ve 3×1 engeller ile dört farklı işlevli taş var. Referanstaki engeller arasından geçme düzeni yerine, **bir hedef cebinin girişini açma ve büyük bloğa yeterli park alanı sağlama** problemi kuruldu. Önceki Level 1'in tam genişlikteki orta duvarı, 4×1+1×1 ilişkisi ve üst sağ hedefi de korunmadı. Bu, referansın veya önceki bölümün döndürülmüş/aynalanmış sürümü değildir.
+- **M1:** PieceDefinition.cs / ShapeCatalog sekiz şekle indirildi; BoardValidator InvalidShape hatası korundu.
+- **M2:** MovementEngine.AllowsManualAxis tek manuel izin kaynağıdır. Apply yasak eksende aynı snapshot, Changed=false, ActualDistance=0 döndürür; GameSession hamle saymaz. Solver mevcut Apply/EnumerateLegalMoves üzerinden çalışır, yasak komut üretmez. İkinci hareket/çarpışma motoru yok.
+- **M3:** LevelOneGameplay, ekseni kilitlemeden aynı Core izin API'sini sorar. Yasak ilk yön görseli taşımaz/ekseni kilitlemez; asıl geçiş yine Session.Preview/Apply'dır. Mouse/touch korunur.
+- **M4:** LevelOne onaylı yerleşimle değiştirildi. Eski bağımsız BFS sonucu yerine yeni production Core Solver/replay kanıtı kullanıldı.
+- **M5:** Eski dokuz şekil/dört yönlü uzun blok ve eski gate/blue yerleşimi beklentileri güncellendi. Hiçbir mevcut test dosyası silinmedi.
+- **M6:** Mevcut prefab kataloğu genişletildi; dikey yönelimler ve capture mesh sayımı yeni yerleşime uyarlandı.
+- **M7:** MovementEngine.RulesVersion **2**; SchemaVersion **1** kaldı. Validator UnsupportedRulesVersion hatasıyla diğer sürümleri reddeder. CreateInitial eski/bilinmeyen içeriği yüklemez; Apply, legal enumeration ve Solve sürüm guard'ı içerir. SolutionProof RulesVersion taşır. RefreshPuzzle proof sürümünü ve tam Core replay'i kontrol etmeden sahne/asset yazmaz.
 
-## 2. Elle tasarlanan üç aday
+Manuel yön/renk/prefab mantıkları Core dışında yeniden yazılmadı. Ara hücre çarpışması, sınırlar, sabit engel, NO_OP, mesafeden bağımsız bir hamle, deterministik BFS, INCOMPLETE ve hedefte release öncesi Win korundu. V1 içerik/proof otomatik dönüştürülmedi; eski Editor adayları ve diğer onaylı bölümler değiştirilmedi. Eski aday analizi yeni motorda açık sürüm reddi verir.
 
-Koordinatlar sol alt (0,0); +x sağa, +y yukarı/Unity +Z. Dikdörtgen origin'i sol alt hücredir. Tüm adaylar 6×6, tek 1×1 yıldızlı, tetikleyicisiz ve BoardValidator açısından geçerlidir.
+Gravity henüz uygulanmamıştı; bu görevde de geliştirilmedi. Trigger'lı level açık NotSupportedException ile reddedilir. Manuel izin API'si otomatik gravity değildir; gelecekte yatay blokların aşağı düşmesi bu filtreden geçirilmemeli. Bu teslim gerçek gravity düşüşünü uyguladı/test etti iddiası içermez.
 
-| Aday | Yıldız → hedef | Hareketli engeller (boyut, origin) | Sabit taşlar |
-|---|---|---|---|
-| A — Alan açma zinciri | (4,0) → (1,4) | gate 2×2 (0,4); blue 3×1 (2,4); bridge 2×1 (2,3); support 1×1 (3,2) | (0,3), (3,1) |
-| B — Hedef Cebi, seçilen | (5,5) → (2,0) | gate 2×2 (2,1); blue 3×1 (1,3) | (1,0), (3,0), (1,1), (4,1) |
-| C — Yıldızı geçici park et | (3,3) → (0,3) | gate 3×1 (0,3); blue 2×1 (4,3) | (0,2), (0,4), (2,2), (2,4), (5,2) |
+## Kesin yerleşim ve görsel eşleme
 
-| Aday | Mevcut BFS minimumu | İlk kanıtta ziyaret | Örnek minimum çözüm | Tasarım kararı |
-|---|---:|---:|---|---|
-| A | 6 | 50688 | star ←3; bridge →2, ↓1; blue ↓1; gate →2; star ↑4 | REVISE/REJECT: iki eksenli bridge manevrası daha dolaylı; support hareket etmeden optimum çözüm var ve hedef başlangıçta örtülü |
-| B | 5 | 1948 | star ↓3; blue ↑2; gate ↑2; star ←3, ↓2 | ACCEPT: görünür hedef, okunabilir iki engel bağımlılığı, alt/orta/üst alan kullanımı |
-| C | 6 | 2034 | star ↓1; blue ↑2; gate →3, ↑1; star ↑1, ←3 | REJECT for Level 1: gerçek karşılıklı yol açma fikri var; ancak yıldızın önce uzaklaşıp geri gelmesi daha dolaylı ve bazı optimumlar iki satıra sıkışıyor |
+Sol alt (0,0); +X sağa, +Y yukarı/Unity +Z; grid pitch **1 Unity birimi**. BoardRoot/PiecesRoot nötr dönüş/birim ölçek yapısı korundu.
 
-Bütün bu minimumlar mevcut BoardSolver'ın tamamlanan BFS sonuçlarıdır; örnek yollar aynı MovementEngine üzerinden WIN olarak tekrarlandı. Seçim “en az hamleli aday kazanır” puanlamasıyla yapılmadı.
+| ID | Şekil | Sol alt hücre | Prefab | Mevcut materyal |
+|---|---|---|---|---|
+| star | 1×1 | (2,5) | Special_1x1_Star | Ivory/Gold alt materyalleri |
+| A | 1×3 | (3,2) | Block_1x3 | BR_Plastic_Blue |
+| B | 3×1 | (3,1) | Block_3x1 | BR_Plastic_Green |
+| C | 1×2 | (2,0) | Block_1x2 | BR_Plastic_Yellow |
+| D | 1×1 | (5,2) | Block_1x1 | BR_Plastic_Red |
+| E | 2×1 | (4,3) | Block_2x1 | BR_Plastic_Purple |
+| F | 2×2 | (0,3) | Block_2x2 | BR_Plastic_Orange |
 
-### A'nın kalite incelemesi ve sınırları
+Taşlar **(0,2), (4,2), (4,0)**; mevcut Obstacle_1x1_Stone ve texture/materyalleri. Tetikleyici yok. Turkuaz Exit_Cell **(5,0)**, mevcut .004 Y ofsetiyle MarkersRoot/ExitVisual altında; editörde ve Play Mode'da tek örnek.
 
-Amaçlanan support→bridge→blue→gate zinciri tam gerçekleşmedi. Solver, support'u hiç oynatmadan bridge'i önce sağa, sonra aşağı park ederek çözüm buldu. Support dondurulduğunda da kazanılabiliyor (5375 ziyaret); onu hareketli olarak sunmak için yeterli öğretici gerekçe yok. Blue dondurulunca tam tarama 10200 durumda, bridge dondurulunca 3412 durumda UNSOLVABLE döndü. Gate dondurma taraması 100000 durum limitinde **INCOMPLETE** kaldı; bu taramaya dayanarak çözümsüzlük iddiası yapılmıyor. A'nın bütün minimum yolları ve tam grafiği çıkarılmadı; kabul edilmedi. Hareketli support'un destek işlevi ile hareketinin zorunluluğu birbirine karıştırılmadı.
+Bağımsız dikey prefablar yoktu. Aynı onaylı Block_2x1/3x1/4x1 FBX mesh'leri, yeni Block_1x2/1x3/1x4 prefablarında sabit **model çocuğu Y=90°** yönelimiyle kullanıldı. Wrapper dönüşü sıfır; bütün ölçekler bir. Yeni mesh/FBX, geçici model veya ölçek hilesi yok; oyuncu rotasyonu eklenmedi. Üç Unity testi gerçek mesh paylaşımı, bütün alt ölçekler ve vertex bounds/pivot doğruladı. Katalog **11 entry**: sekiz yönelim + yıldız + taş + 6×6 board. Gerçek 5×5 board asseti üretilmedi; mantıksal 5×5 grid/kamera desteği test edildi.
 
-### C'nin kalite incelemesi
+## Production Core Solver sonucu
 
-C'de hem yıldızın hem mavinin yer değiştirmesi gate'in manevrasını açıyor. Böylece yıldız sadece teslim edilecek parça değil, geçici olarak park edilmesi gereken bir engel de oluyor. İki engel ayrı ayrı dondurulduğunda tam taramalar UNSOLVABLE (gate 520, blue 51 durum). Tam grafik 4577 durum/56542 geçiş; 66 optimum komut dizisinin tamamı replay edildi. Yıldızın optimumdaki farklı satır kullanımı 2–4, sütun kullanımı 4; süpürülen hücre 12–17. 66 dizi, 66 ayrı strateji demek değildir.
+**BoardValidator geçerli — Solved — rulesVersion 2 — minimum 8 — visited 8.972 — tam replay WIN.** BFS tamamlanmış minimumu verdi; daha kısa yol bu aramada yok. Her adımın izinli ekseni/ActualDistance değeri kontrol edildi.
 
-Taş çıkarma deneylerinde (0,2)/(0,4) kaldırılınca yalnız star+gate ile 4 hamlelik yan giriş; (2,2)/(2,4) kaldırılınca maviyi gerektirmeyen 5 hamlelik gate kaçışı oluştu. (5,2) çıkarılınca başlangıç UnstableStart oldu. Taşlar işlevsiz görünmüyor; ancak hedefin başlangıçta örtülü olması, karşılıklı park fikri ve bazı dar optimum rotalar ilk öğretici için B kadar okunabilir bulunmadı. Bu yorum yalnız taş veya blok sayısına dayanmaz.
+| Hamle | Hareket | Başlangıç → bitiş |
+|---:|---|---|
+| 1 | star sağ 3 | (2,5) → (5,5) |
+| 2 | C yukarı 2 | (2,0) → (2,2) |
+| 3 | B sol 3 | (3,1) → (0,1) |
+| 4 | A aşağı 2 | (3,2) → (3,0) |
+| 5 | D aşağı 1 | (5,2) → (5,1) |
+| 6 | D sol 1 | (5,1) → (4,1) |
+| 7 | E sol 1 | (4,3) → (3,3) |
+| 8 | star aşağı 5 | (5,5) → (5,0), anında Win |
 
-## 3. Seçilen Level 1 — koordinatlı yerleşim
+Seçilen yolda 5 farklı engel hareket eder; D iki eksende park edilir, F hareket etmez. C→B→A→E alan açma zinciri, B→D park imkânı vardır; D/E sağ iniş koridorunu temizler. B veya C başlangıçta dondurulduğunda kazanma olmadığını tam kalite taramaları doğruladı. Diğer her engelin bütün çözümlerde hareket etmesi gerektiği iddia edilmiyor. Zorluk etiketi kullanıcı onayındaki Kolay'dır; yalnız hamle sayısından zorluk puanı türetilmedi.
 
-```text
-       x=0 1 2 3 4 5
-y=5      . . . . . S
-y=4      . . . . . .
-y=3      . B B B . .
-y=2      . . G G . .
-y=1      . # G G # .
-y=0      . # E # . .
+## TDD / gerçek test sonuçları
+
+Kanıt kökü: `C:/Users/sahba/BlockRift/TestResults/MovementV2_20261028_131845/`.
+
+| Çalışma | Gerçek sonuç | Kayıt |
+|---|---|---|
+| V2 testleri / eski Core — RED | 107 geçti, **18 başarısız** | core-red.xml |
+| İlk Core migration | 121 geçti, 4 eski yerleşim beklentisi başarısız | core-migration.xml |
+| Son saf Core/Application | **135 geçti, 0 başarısız, 0 atlandı** | core-final.xml |
+| İlk Unity EditMode | 213 geçti, 1 eski mesh sayımı başarısız | editmode.xml |
+| Son Unity EditMode | **214 geçti, 0 başarısız, 0 atlandı** | editmode-final.xml |
+| Unity PlayMode | **8 geçti, 0 başarısız, 0 atlandı** | playmode.xml |
+
+135 saf test 214 EditMode testinin alt kümesidir; ayrıca toplamla toplanmamalı. Mesh sayımı beklentisine editörde görünür hedef eklendi ve hedef dünya koordinatı da test edildi. Başarısız çalışmalar saklandı, test gizlenmedi.
+
+Kapsam: sekiz şeklin 32 yön kombinasyonu, hedefin dört yönü, 3×3/invalid shape, eski/bilinmeyen sürüm retleri, aynı snapshot/NO_OP, hamle sayımı, ara hücre/sınır, açık trigger desteği reddi, kesin A–F koordinatları, minimum/replay/INCOMPLETE; gerçek prefab/materyal, 5×5/6×6 kadraj, mouse/touch, yasak görsel hareket/state, kare iki eksen, Restart ve release öncesi Win.
+
+### Gerçek komutlar ve ortam
+
+Unity **6000.3.23f1**, URP **17.3.0**. Açık ana editöre müdahale etmemek için cache'li ignored doğrulama projesi kullanıldı:
+`C:/Users/sahba/BlockRift/TestResults/SafeCleanupPhase1_20261027_234230/ValidationProject`.
+
+Ana Assets/Packages/ProjectSettings snapshot'ı kopyalandı; eski temizliğe özel iki yardımcı test bu kopyadan çıkarıldı. Yeni sayılara bu eski yardımcılar dahil değil. Ana/test C# kaynakları ve teslim edilen dokuz sahne/asset dosyası byte olarak karşılaştırıldı. İzole importun normalize ettiği Mobile_RPAsset ana projeye aktarılmadı.
+
+```powershell
+& TestResults/MovementV2_20261028_131845/run-core.ps1
 ```
 
-S=star; G=tek 2×2 gate; B=tek 3×1 blue; #=sabit taş; E=görünür hedef. Birbirine bitişik G/B hücreleri ayrı parçalar değildir.
+Bu script kaynakları mevcut NUnit ile bellekte derleyip gerçekten çalıştırır; başka bir hareket motoru değildir. İlk red/ara çalışmalar da aynı Add-Type/NUnit runner yöntemiyle koşuldu.
 
-| ID / nesne | Başlangıç | Mevcut prefab / materyal |
-|---|---|---|
-| star, 1×1 | (5,5) | Special_1x1_Star, mevcut krem/altın |
-| gate, 2×2 | (2,1) | Block_2x2, mevcut BR_Plastic_Green |
-| blue, 3×1 | (1,3) | Block_3x1, mevcut BR_Plastic_Blue |
-| sabit taşlar | (1,0), (3,0), (1,1), (4,1) | Obstacle_1x1_Stone, mevcut stone materyali |
-| hedef | (2,0) | mevcut Exit_Cell prefab'ı, mevcut turkuaz materyal |
+Unity aşağıdaki argümanlarla gerçekten çalıştırıldı; yer tutucular yerine tam mutlak proje/log/XML yolları kullanıldı:
 
-İlk B denemesinde gate hedefi örtüyordu. Görünür hedef kalite testi bu sürümü reddetti; gate bir satır yukarı alınıp hedef açık bırakıldı ve cebin yan girişleri yeniden tasarlandı. Bu revizyonun Solver hesabı yeniden yapıldı. Materyal, UI veya hedef prefab'ı değiştirilerek sorun gizlenmedi.
+```text
+Unity.exe -batchmode -nographics -projectPath <izole-proje>
+  -executeMethod BlockRift.Editor.LevelOneSetup.RefreshPuzzle -quit -logFile <integrate.log>
+Unity.exe -batchmode -nographics -projectPath <izole-proje>
+  -runTests -testPlatform EditMode -testResults <editmode-final.xml> -logFile <editmode-final.log>
+Unity.exe -batchmode -nographics -projectPath <izole-proje>
+  -runTests -testPlatform PlayMode -testResults <playmode.xml> -logFile <playmode.log>
+Unity.exe -batchmode -force-d3d11 -projectPath <izole-proje>
+  -executeMethod BlockRift.Editor.GameplayGameViewCapture.CaptureBatch -logFile <gameview.log>
+```
 
-### Neden bu parçalar var?
+Core doğrulaması ve Unity testleri tamamlanmadan sahne ana projeye aktarılmadı. Eski temizliğin XML'leri bu teslimin testi gibi kullanılmadı. Sınırlı C#/test yollarında `git diff --check` geçti; yalnız CRLF→LF uyarıları vardı.
 
-- **Gate:** Hedef cebinin üst girişini kapatan büyük blok. Bir satır yükselince yakındaki hücre boş görünür, fakat cebin üst ağzı hâlâ kapalıdır; yeterli park alanı gerekir.
-- **Blue:** Gate'in yukarı çıkmasını engeller. Birinci planlama kararı blue'ya üstte yer açmaktır. Daha uzun 3×1 ayakizi, yatayda bir hücre itmenin büyük bloğa yeterli boşluk yaratmadığını görünür kılar.
-- **Taş (1,0):** Hedefe soldan doğrudan giriş kısa yolunu kapatır.
-- **Taş (3,0):** Sağ alt kısa yolu kapatır, gate'e başlangıç desteği verir ve aşağı kaçışını engeller.
-- **Taş (1,1):** Gate'in başlangıçta sola park ederek üst alan problemini atlamasını önler.
-- **Taş (4,1):** Aynı kısıtı sağ tarafa uygular.
+## Gerçek Game View / koruma
 
-İki engel ve dört taş bu işlevlerden çıktı. Ek renkli bloklar doluluk uğruna eklenmedi; bir bloğu tek başına kenara itip kazanmak mümkün değildir.
+![Küçük Aktarma — gerçek Unity Game View](Gameplay_6x6_GameView.png)
 
-## 4. Teknik kanıtlar ve gerçek bağımlılıklar
+Unity Play Mode / ScreenCapture çıktısıdır; mockup veya AI görseli değildir. PNG **1080×1920** boyutu dosyadan doğrulandı; görsel A–F/yıldız/taş/hedef koordinatlarıyla karşılaştırıldı. SHA256: `86e20fa762c88abd80350e366604bd1d4bc755d0b3b38ca5fd0bdc3dc27d9d1d`.
 
-| Seçilen B ölçümü | Sonuç |
-|---|---|
-| Başlangıç | BoardValidator geçerli; hedef açıkta; destek/çakışma/sınırlar geçerli |
-| Solver | SOLVED; minimum 5; replay WIN |
-| Tam grafik | COMPLETE; 4188 durum, 51439 yönlü geçiş |
-| Tüm minimum komut dizileri | COMPLETE; 3 dizi, hepsi Core üzerinde WIN |
-| Her optimumda hareket eden engeller | gate ve blue, ikisi de |
-| Her optimumda yıldız rotası | 6 farklı satır, 4 farklı sütun |
-| Süpürülen farklı hücreler | 19; ara hücreler ve hareket eden dikdörtgenlerin ayakizleri dahil |
-| Erişilebilir çıkmazlar | 0 |
+Mevcut ortak sahne YAML belgelerinden yalnız PiecesRoot/MarkersRoot çocuk listeleri değişti; kamera, background, board ve UI belgeleri aynı. Eski instance'lar onaylı yenileriyle değiştirildi. Blender/FBX, eski materyal/dokular, GDD/CONSISTENCY dahil **43 korunan dosya** başlangıç hash'leriyle aynı. BoardGridLayout/BoardVisualLayout ve kamera/viewport kodları değiştirilmedi.
 
-Gate başlangıçta hiçbir yönde hareket edemiyor: aşağı ve yanlar taşlarla, yukarısı blue ile kapalı. Dolayısıyla **blue → gate → yıldızın hedef cebine girişi** gerçek bir bağımlılıktır. Yıldızın sağ kenardan ilk yaklaşma hareketi bağımsız bir hazırlık olabilir; tek bir ezberlenmiş sıra dayatılmaz.
+Önceki [V1 rapor](archive/development/LEVEL1_RULES_V1_REPORT.md), [V1 spec](archive/development/LEVEL1_RULES_V1_SPEC.md) ve [V1 görsel](archive/screenshots/Level1_RulesV1_GameView.png) korundu.
 
-Gate dondurulduğunda 288, blue dondurulduğunda 24 durumluk tamamlanan filtreli grafiklerde kazanma yok. Böylece her ikisinin hareketi sadece bir örnek çözüm için değil, bütün kazanma yolları için gereklidir.
+## Kalan sınırlar ve riskler
 
-**Araç ayrımı:** BoardSolver minimum yol ve Solved/Unsolvable/Incomplete sonucu sağlar. Dondurma, tüm optimum yollar, alan kullanımı ve ters geçiş denetimi onun hazır API özellikleri değildir. Mevcut Editor kalite aracı bunları, aynı Core EnumerateLegalMoves/Apply üzerinde grafik incelemesi yaparak hesapladı. Yeni çarpışma, fizik veya runtime Solver yazılmadı. Dondurma sırasında hareketli parçayı FixedCell'e dönüştürmek yerine ilgili ID'nin kenarları filtrelendi; özgün geçerli level ve hedef işgali kuralları korundu.
+- Gravity/cascade, Undo/Hint, ekonomi/save ve Generator geliştirilmedi. Otomatik gravity manuel yön filtresinden bağımsız olmalı; açık NotSupported koruması devam ediyor.
+- V1 level/proof'lar yeniden doğrulanmadan v2 sayılmamalı. Eski manuel adaylar değiştirilmedi. Gelecekte level/sürümler arasında cache eklenirse levelId/rulesVersion da cache kimliğine alınmalı.
+- PlayMode testlerinde oyun koduna ait beklenmeyen hata yok. Grafik yakalama başlangıcında önceki entegrasyon raporlarında da kayıtlı **UnityEditor.Search.SearchDatabase ArgumentOutOfRangeException** tekrar görüldü. Capture tamamlandı; “Editor Console tamamen hatasız” iddiası yok. Ana Editor cache'ine müdahale edilmedi.
+- Yakalama aracının yardımcı JSON'u o anda Screen değerlerini 1918×991 yazdı; bu backbuffer/UI metriği PNG boyutu sayılmadı. Teslim PNG'si dosyadan 1080×1920 doğrulandı; yardımcı JSON çözünürlük kanıtı olarak kullanılmadı.
+- Geometri/normal düzeltmesi ve gerçek cihaz performans testi yapılmadı; mevcut shading kalitesi korundu.
+- Commit/push/reset/clean yapılmadı.
 
-0 çıkmaz kanıtı: tam grafikte terminal olmayan her geçişin ters komutu Core'da önceki snapshot'a döndü. Bu yüzden her erişilebilir terminal olmayan durum, kazanma yolu bilinen başlangıca geri dönebiliyor. Bu kanıt tetikleyicili gelecekteki bölümlere genellenmedi.
+## Değiştirilen dosyalar
 
-### Minimum çözüm
+Bu görevin Git çalışma ağacı; ignored TestResults kanıtları ayrıca saklanır.
 
-1. star aşağı 3: (5,5) → (5,2).
-2. blue yukarı 2: (1,3) → (1,5).
-3. gate yukarı 2: (2,1) → (2,3).
-4. star sola 3: (5,2) → (2,2).
-5. star aşağı 2: (2,2) → (2,0), bırakma beklenmeden WIN.
-
-Üç minimum komut dizisi, üç ayrı strateji sayılmadı. 5'ten kısa çözüm olmadığı BFS ile doğrulandı; bütün minimumlar iki engeli de hareket ettiriyor.
-
-### Farklı bir park stratejisi
-
-Soldaki boş alan da çalışır: blue ↑1, →2; gate ↑1, ←2; star ←3, ↓5. Bu 6 hamlelik yol Core replay testiyle doğrulanır ve minimum diye sunulmaz. Oyuncu gate'i üstte park etmek yerine sola çekip yıldız için düz bir iniş hattı hazırlayabilir. Başka uzun çözümler olabilir; bütün uzun yollar veya strateji sınıfları sayılmadı.
-
-### Kısıt kaldırma deneyleri
-
-| Kaldırılan parça/taş | BFS sonucu | Anlam |
-|---|---|---|
-| blue | 4 hamle | Büyük blok için ön hazırlık problemi azalıyor |
-| gate | Karşı-olgusal 3 hamle; başlangıç UnstableStart | Gate ana kısıt ve blue'nun desteği |
-| (1,0) | 3 hamle, yalnız star | Sol alt bypass açılıyor |
-| (3,0) | Karşı-olgusal 2 hamle, yalnız star; UnstableStart | Sağ alt bypass ve başlangıç desteği |
-| (1,1) | 4 hamle | Gate sola erken kaçabiliyor |
-| (4,1) | 4 hamle | Gate sağa erken kaçabiliyor |
-
-UnstableStart veren deneyler kabul edilebilir yeni bölüm değildir; yalnız ilgili kısıtın etkisini anlamak için yapılan snapshot karşılaştırmalarıdır. Hiçbir taş sırf görsel dolulukla gerekçelendirilmedi.
-
-## 5. Alan kullanımı ve Çok Kolay değerlendirmesi — tasarım yorumu
-
-Üst sıra blue'nun park alanı; hemen altındaki iki satır gate'in alanıdır. Sağ kenar yıldızın üstten orta bölgeye yaklaşma koridorudur. Orta şerit yatay geçişi, alt cep son inişi sağlar. Sol boşluklar farklı park çözümünde kullanılır. Yıldızın en alta erken inmesi hedefe otomatik erişim sağlamaz; oyuncu dönüşünü doğru satırda yapmayı düşünür. Bu deneme geri çevrilebilir.
-
-Her boş hücrenin tek tek zorunlu olduğu veya her hücreden geçildiği iddia edilmiyor. Alan kalitesi doluluk oranıyla puanlanmadı. Önceki tam genişlikte orta duvar yerine, üstte manevra alanı oluşturup alt hedef cebini erişilebilir kılmak gerekiyor.
-
-Çok Kolay seçimi öznel uzman değerlendirmesidir: hedef görünür, iki engel ilişkisi okunabilir, tüm hatalar normal hareketlerle geri çevrilebilir, trigger/süre baskısı yok ve kısa neden-sonuç zinciri var. A'daki iki eksenli dolaylı zincir ve C'deki yıldızı önce park edip geri getirme kararı daha fazla açıklama gerektiriyor. Karar sadece 5/6 hamle veya blok sayısına dayanmaz. İnsan oyuncu testi yapılmadı; bilimsel zorluk iddiası yoktur.
-
-## 6. Unity entegrasyonu ve koruma
-
-Mevcut BlockRift_Gameplay sahnesi, BoardRoot/PiecesRoot ve 1 hücre=1 birim adaptörü kullanıldı. Sadece seçilen B sahneye bağlandı. A/C sahneleri oluşturulmadı. Palette'te gate→Block_2x2, blue→Block_3x1 eşlemesi değişti; materyal referansları aynı kaldı. Material üreten Build çağrılmadı; mevcut RefreshPuzzle yerleşim girişi kullanıldı.
-
-Hazır hareketli prefab ayakizleri 1×1, 2×1, 3×1, 4×1, 2×2'dir. GDD'deki 1×2, 1×3, 1×4 ve 3×3 için katalogda uygun gerçek görsel yok. Bunlar ölçeklenerek taklit edilmedi. Seçilen bölümün gerekli assetlerinde eksik yoktur.
-
-Hareket motoru, BoardSolver, Core kuralları, GameSession, input, kamera, arka plan, URP materyal sistemi, tahta geometrisi ve Blender assetleri değiştirilmedi. Önceden onaylı perspective kamera korundu. Otomatik generator, yeni ana sahne veya yeni paket eklenmedi.
-
-![Gerçek 1080×1920 Unity Game View](C:/Users/sahba/BlockRift/docs/Gameplay_6x6_GameView.png)
-
-## 7. Test ve teslim kanıtları
-
-TDD: yeni hedef cebi testi önce eski düzeni reddetti (4 testte 1 başarısız). Ardından hedef görünürlüğü testi, hedefi örten ilk B denemesini de reddetti (4 testte 1 başarısız). Son revizyon ve alternatif sol park yolu mevcut Core üzerinden doğrulandı.
-
-Son EditMode/PlayMode sonuçları teslim kanıtlarıyla raporun sonunda belirtilir. Orijinal 69 Core testi ile kamera, grid, prefab ve mevcut input regresyonları korunur. Fiziksel mobil cihaz testi yapılmadı; PlayMode cihaz olayları InputTestFixture ile çalıştırıldı. Gerçek Game View ayrıca incelendi.
-
-Çalıştırılan komutlarda Unity yolu `C:/Program Files/Unity/Hub/Editor/6000.3.23f1/Editor/Unity.exe`, doğrulama proje yolu `C:/Users/sahba/BlockRift/Temp/GameplayFoundationValidation` idi. Ana çıktı klasörü `C:/Users/sahba/BlockRift/TestResults/Level1Independent`:
-
-- `-batchmode -nographics -executeMethod BlockRift.Editor.LevelOneQualityAudit.Run -quit` (quality-final.log, ardından görünür hedef revizyonu için visible-quality.log).
-- `-batchmode -nographics -executeMethod BlockRift.Editor.LevelOneSetup.RefreshPuzzle -quit` (visible-setup.log).
-- `-batchmode -nographics -runTests -testPlatform EditMode -testFilter BlockRift.Tests -testResults .../editmode-delivered.xml -logFile .../editmode-delivered.log`.
-- `-batchmode -runTests -testPlatform PlayMode -testFilter BlockRift.Tests.LevelOnePlayTests -testResults .../playmode.xml -logFile .../playmode.log`.
-- `-batchmode -executeMethod BlockRift.Editor.GameplayGameViewCapture.CaptureBatch` (gameview.log).
-
-Bu komutların her birinde yukarıdaki `-projectPath` kullanıldı. Grafik gerektiren PlayMode/capture komutlarında `-nographics` kullanılmadı. Ham aday raporu `TestResults/Level1Independent/quality.md`; ilk, hedefi örten B denemesi quality-initial.md içinde ayrı korunur. A'nın dondurma INCOMPLETE sonucu gizlenmedi.
-
-## 8. Dosyalar ve AGENTS.md yönlendirmesi
-
-Yeni: `Editor/IndependentLevelOneCandidates.cs` — yalnız üç manuel aday, generator değil.
-
-Güncellenen: `Core/Board/LevelOne.cs` (sabit bölüm verisi), `Editor/LevelOneQualityAudit.cs` (mevcut analiz aracında aday karşılaştırması/hamle filtresi), `Editor/LevelOneSetup.cs` (şekil eşlemeleri), `Content/LevelOnePalette.asset`, `BlockRift_Gameplay.unity`, `LevelOneQualityTests.cs`, `LevelOnePlayTests.cs`, `GameplaySceneTests.cs`, mevcut LEVEL1_SPEC.md, bu rapor ve Game View görüntüsü. Oyun kuralları veya runtime input kodu değişmedi.
-
-AGENTS.md'deki mevcut madde 5 korunarak tasarım kalitesi, bölüm değerlendirmesi, zorluk dengesi, bağımlılıklar ve alan kullanımında **block-rift-level-design zorunlu** yönlendirmesi kullanıldı. Madde 4'teki **block-rift-level-generator** algoritmik üretim, Solver, replay ve teknik kanıt sorumluluğunu koruyor. Madde 6 artık `level-design`, `puzzle`, `procedural-gen` isimlerini açıkça yalnız yardımcı kaynak olarak belirtiyor. Implementation contract'taki mevcut anlamlı bulmaca ilkesi korunup, minimum hamle sayısının da tek başına zorluk belirleyemeyeceği mevcut cümleye eklendi; tekrarlanan yeni talimat paragrafları oluşturulmadı. AGENTS_SNIPPET.md kopyalanmadı veya değiştirilmedi.
-
-Commit/push yapılmadı. Undo, kayıt ve generator geliştirme bu göreve eklenmedi.
-
-### Son teslim sonuçları
-
-- **EditMode: 161/161 geçti, 0 başarısız, 0 atlanan.** Kanıt: `TestResults/Level1Independent/editmode-delivered.xml`.
-- **PlayMode: 6/6 geçti, 0 başarısız, 0 atlanan.** Kanıt: `TestResults/Level1Independent/playmode.xml`.
-- Altı hamlelik sol park alternatifi de Core replay testinden geçti. Bir satırlık eksik kaldırmada, diğer engeller o konumda tutulunca hedef cebine erişilemediği ayrı Solver testiyle doğrulandı.
-- Ana ve izole projede **44 C#/asmdef dosyası aynı**, kaynak farkı yok. Sahne SHA256 değerleri eşit: `DAA4B3B233F9B829C887D24D78B9F7E72BDA735036B7BEC10388210AD5DAA4C9`.
-- Ana editör ve izole gerçek 1080×1920 Game View görüntüleri eşit: `6040759023AA4B7C358F4D6C69867CAE159F7AECC25986194E56FA78BD9BF3BF`.
-- **90 mevcut sanat dosyasında 0 hash değişikliği**. Ortak mevcut sahne YAML nesnelerinde yalnız PiecesRoot çocuk listesi değişti; kamera, arka plan, board/alt tabaka ve UI verileri aynı.
-- GUID denetimi 218 dosyada 0 uyarı ve önceden bilinen DefaultVolumeProfile.asset içindeki aynı 4 missing-script kaydını raporladı (78,119,264,832; exit 1). Yeni gameplay/kalite aracı bağlantısında hata yok.
-- Ana editör ilk capture isteğini henüz eski Core assembly'si yüklüyken mesh sayısı korumasıyla reddetti. Derleme tamamlandıktan sonra tekrar denendi ve gerçek Game View başarıyla alındı; sahneyi veya korumayı kaldırarak geçilmedi.
-
-Kalite kanıtları: `quality.md`, `red.xml`, `visible-goal-red.xml`, `scene-changes.json`, `art-preservation.json`, `delivery-hashes.json`, `gameview.json`, `gameview-main.json`, `meta-check.json`. A'nın kabul edilmeyen tasarımına ait tamamlanmamış alt analiz, seçilen B'nin tamamlanmış minimum/grafik kanıtıyla karıştırılmadı.
+```text
+ M Assets/Scenes/BlockRift_Gameplay.unity
+ M Assets/_BlockRift/Content/GameplayVisualCatalog.asset
+ M Assets/_BlockRift/Content/LevelOnePalette.asset
+ M Assets/_BlockRift/Core/Board/BoardSolver.cs
+ M Assets/_BlockRift/Core/Board/BoardValidator.cs
+ M Assets/_BlockRift/Core/Board/LevelOne.cs
+ M Assets/_BlockRift/Core/Board/MovementEngine.cs
+ M Assets/_BlockRift/Core/Board/PieceDefinition.cs
+ M Assets/_BlockRift/Editor/GameplayGameViewCapture.cs
+ M Assets/_BlockRift/Editor/LevelOneSetup.cs
+ M Assets/_BlockRift/Presentation/Board/LevelOneGameplay.cs
+ M Assets/_BlockRift/Tests/EditMode/BoardValidatorTests.cs
+ M Assets/_BlockRift/Tests/EditMode/LevelOneQualityTests.cs
+ M Assets/_BlockRift/Tests/EditMode/LevelOneTests.cs
+ M Assets/_BlockRift/Tests/EditMode/MovementTests.cs
+ M Assets/_BlockRift/Tests/PlayMode/LevelOnePlayTests.cs
+ M Assets/_BlockRift/Tests/Presentation/BoardVisualLayoutTests.cs
+ M Assets/_BlockRift/Tests/Presentation/GameplayArtIntegrationTests.cs
+ M Assets/_BlockRift/Tests/Presentation/GameplaySceneTests.cs
+ M README.md
+ M docs/Gameplay_6x6_GameView.png
+ M docs/LEVEL1_REPORT.md
+ M docs/LEVEL1_SPEC.md
+ M docs/README.md
+?? Assets/_BlockRift/Art/Prefabs/Gameplay/Block_1x2.prefab
+?? Assets/_BlockRift/Art/Prefabs/Gameplay/Block_1x2.prefab.meta
+?? Assets/_BlockRift/Art/Prefabs/Gameplay/Block_1x3.prefab
+?? Assets/_BlockRift/Art/Prefabs/Gameplay/Block_1x3.prefab.meta
+?? Assets/_BlockRift/Art/Prefabs/Gameplay/Block_1x4.prefab
+?? Assets/_BlockRift/Art/Prefabs/Gameplay/Block_1x4.prefab.meta
+?? Assets/_BlockRift/Tests/EditMode/MovementRulesV2Tests.cs
+?? Assets/_BlockRift/Tests/EditMode/MovementRulesV2Tests.cs.meta
+?? docs/archive/development/LEVEL1_RULES_V1_REPORT.md
+?? docs/archive/development/LEVEL1_RULES_V1_SPEC.md
+?? docs/archive/screenshots/Level1_RulesV1_GameView.png
+```

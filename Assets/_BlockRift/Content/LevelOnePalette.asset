@@ -16,12 +16,24 @@ MonoBehaviour:
   - pieceId: star
     assetId: Special_1x1_Star
     material: {fileID: 0}
-  - pieceId: gate
-    assetId: Block_2x2
-    material: {fileID: 2100000, guid: 9ce2ad6a3bbbc4c40b21c84af6da747d, type: 2}
-  - pieceId: blue
-    assetId: Block_3x1
+  - pieceId: A
+    assetId: Block_1x3
     material: {fileID: 2100000, guid: bc78911e0f124e14ea2f69459136ab30, type: 2}
+  - pieceId: B
+    assetId: Block_3x1
+    material: {fileID: 2100000, guid: 9ce2ad6a3bbbc4c40b21c84af6da747d, type: 2}
+  - pieceId: C
+    assetId: Block_1x2
+    material: {fileID: 2100000, guid: 5e621b779e0a16d438c7ee4f792329f0, type: 2}
+  - pieceId: D
+    assetId: Block_1x1
+    material: {fileID: 2100000, guid: e8cd13fdfddf06d4a8c75966b1dd9dfe, type: 2}
+  - pieceId: E
+    assetId: Block_2x1
+    material: {fileID: 2100000, guid: 507f85a69b26ac64d9b32e9cc242d615, type: 2}
+  - pieceId: F
+    assetId: Block_2x2
+    material: {fileID: 2100000, guid: f78830323ec94384799a2007fec054ee, type: 2}
   colors:
   - {fileID: 2100000, guid: bc78911e0f124e14ea2f69459136ab30, type: 2}
   - {fileID: 2100000, guid: 9ce2ad6a3bbbc4c40b21c84af6da747d, type: 2}

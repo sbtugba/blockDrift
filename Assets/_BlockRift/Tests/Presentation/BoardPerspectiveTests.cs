@@ -35,6 +35,7 @@ namespace BlockRift.Tests
             settings.FindProperty("verticalFieldOfView").floatValue=fov;
             settings.ApplyModifiedPropertiesWithoutUndo();
             var camera=root.GetComponentInChildren<Camera>();
+            camera.transform.rotation=Quaternion.Euler(perspective?78:90,0,0);
             // Projection seçimi adaptör kontrolünden önce uygulanır.
             framing.ApplyLayout(width,height,new Rect(0,0,width,height));
             var layout=root.Find("BoardRoot").GetComponent<BoardVisualLayout>();
@@ -68,7 +69,7 @@ namespace BlockRift.Tests
             }
         }
 
-        [Test] public void ActiveBoardIsNewFramelessPrefabWithUnchangedSurfaceAndThinSupport()
+        [Test] public void ActiveBoardHasIndependentCellsAndSandWithoutSupportPanel()
         {
             var layout=root.Find("BoardRoot").GetComponent<BoardVisualLayout>();
             Assert.That(layout.VisualCatalog.TryGetBoard(6,out var entry),Is.True);
@@ -79,17 +80,17 @@ namespace BlockRift.Tests
             var meshes=board.GetComponentsInChildren<MeshFilter>();Assert.That(meshes.Length,Is.EqualTo(2));
             int triangles=0;
             foreach(var mesh in meshes)triangles+=mesh.sharedMesh.triangles.Length/3;
-            Assert.That(triangles,Is.EqualTo(16672));
-            var bounds=BlockRift.Editor.GameplayArtIntegration.MeasureBounds(board);
-            Assert.That(bounds.size.x,Is.EqualTo(5.98f).Within(.00001));Assert.That(bounds.size.z,Is.EqualTo(5.98f).Within(.00001));
-            Assert.That(bounds.min.y,Is.EqualTo(-.067f).Within(.00001));Assert.That(bounds.max.y,Is.EqualTo(-.001f).Within(.00001));
+            Assert.That(triangles,Is.EqualTo(16128+3600));
+            var bounds=BlockRift.Editor.GameplayArtAssets.MeasureBounds(board.Find("Cells"));
+            Assert.That(bounds.size.x,Is.EqualTo(5.97f).Within(.00001));Assert.That(bounds.size.z,Is.EqualTo(5.97f).Within(.00001));
+            Assert.That(bounds.min.y,Is.EqualTo(-.061f).Within(.00001));Assert.That(bounds.max.y,Is.EqualTo(-.001f).Within(.00001));
         }
 
-        [Test] public void SceneUsesApprovedPerspectiveAngleAndReservesUpperAndLowerUi()
+        [Test] public void SceneUsesApprovedTopDownAngleAndReservesUpperAndLowerUi()
         {
             var camera=root.GetComponentInChildren<Camera>();
-            Assert.That(camera.orthographic,Is.False);
-            Assert.That(Quaternion.Angle(camera.transform.rotation,Quaternion.Euler(78,0,0)),Is.LessThan(.001));
+            Assert.That(camera.orthographic,Is.True);
+            Assert.That(Quaternion.Angle(camera.transform.rotation,Quaternion.Euler(90,0,0)),Is.LessThan(.001));
             Assert.That(camera.fieldOfView,Is.InRange(15f,35f));
             var safe=root.Find("UIRoot/GameplayCanvas/SafeArea");
             var area=safe.Find("BoardViewport").GetComponent<RectTransform>();
@@ -141,7 +142,7 @@ namespace BlockRift.Tests
             Assert.That(piece.localPosition,Is.EqualTo(layout.Grid.PieceBaseCenter(new Cell(x,y),width,height)));
             Assert.That(piece.localScale,Is.EqualTo(Vector3.one));
             Assert.That(Quaternion.Angle(piece.localRotation,Quaternion.identity),Is.LessThan(.001));
-            var bounds=BlockRift.Editor.GameplayArtIntegration.MeasureBounds(piece);
+            var bounds=BlockRift.Editor.GameplayArtAssets.MeasureBounds(piece);
             Assert.That(bounds.min.y,Is.EqualTo(0).Within(.00001));
         }
     }
