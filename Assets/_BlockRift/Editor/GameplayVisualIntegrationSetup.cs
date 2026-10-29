@@ -12,7 +12,8 @@ namespace BlockRift.Editor
         /// <summary>Mevcut Gameplay sahnesini koruyarak BoardRoot/PiecesRoot adaptörünü bağlar; asset üretmez.</summary>
         public static void ConfigureExistingScene()
         {
-            if (!Application.isBatchMode) throw new InvalidOperationException("Bu bakım girişi yalnız izole batch doğrulama içindir.");
+            if (!Application.isBatchMode)
+                throw new InvalidOperationException("Bu bakım girişi yalnız izole batch doğrulama içindir.");
             var scene = EditorSceneManager.OpenScene(GameplaySceneSetup.ScenePath, OpenSceneMode.Single);
             var root = scene.GetRootGameObjects()[0].transform;
             ConfigureRoots(root);
@@ -25,9 +26,11 @@ namespace BlockRift.Editor
         {
             var board = root.Find("BoardRoot");
             var framing = root.GetComponentInChildren<GameplayViewportLayout>();
-            if (!board || !framing) throw new InvalidOperationException("Mevcut Gameplay kökleri eksik.");
+            if (!board || !framing)
+                throw new InvalidOperationException("Mevcut Gameplay kökleri eksik.");
             var layout = board.GetComponent<BoardVisualLayout>();
-            if (!layout) layout = board.gameObject.AddComponent<BoardVisualLayout>();
+            if (!layout)
+                layout = board.gameObject.AddComponent<BoardVisualLayout>();
             var data = new SerializedObject(layout);
             data.FindProperty("boardVisualsRoot").objectReferenceValue = board.Find("BoardVisualsRoot");
             data.FindProperty("piecesRoot").objectReferenceValue = board.Find("PiecesRoot");
@@ -36,7 +39,8 @@ namespace BlockRift.Editor
             var cameraData = new SerializedObject(framing);
             cameraData.FindProperty("visualLayout").objectReferenceValue = layout;
             cameraData.ApplyModifiedPropertiesWithoutUndo();
-            if (!layout.ValidateSetup(out string issue)) throw new InvalidOperationException(issue);
+            if (!layout.ValidateSetup(out string issue))
+                throw new InvalidOperationException(issue);
             framing.ApplyLayout(1080, 1920, new Rect(0, 0, 1080, 1920));
         }
     }

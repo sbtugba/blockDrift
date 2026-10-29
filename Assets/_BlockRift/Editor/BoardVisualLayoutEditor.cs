@@ -43,8 +43,10 @@ namespace BlockRift.Editor
                     bool passed = checkBoard
                         ? VisualModelChecks.ValidateBoardBounds(bounds, layout.Grid.Size, out modelIssue)
                         : VisualModelChecks.ValidatePieceBounds(bounds, pieceWidth, pieceHeight, out modelIssue);
-                    if (passed) Debug.Log("Model bounds/pivot kontrolü PASS. Gerçek panel merkezleri, materyal ve hücre fit kontrolü ayrıca yapılmalı.", modelWrapper);
-                    else Debug.LogError(modelIssue, modelWrapper);
+                    if (passed)
+                        Debug.Log("Model bounds/pivot kontrolü PASS. Gerçek panel merkezleri, materyal ve hücre fit kontrolü ayrıca yapılmalı.", modelWrapper);
+                    else
+                        Debug.LogError(modelIssue, modelWrapper);
                 }
             }
             EditorGUI.EndDisabledGroup();
@@ -55,9 +57,16 @@ namespace BlockRift.Editor
         public static void InspectSelectedModelBounds()
         {
             Transform wrapper = Selection.activeTransform;
-            if (!wrapper) { Debug.LogWarning("Önce gelecekte import edilecek model wrapper'ını seçin. INCOMPLETE."); return; }
+            if (!wrapper)
+            {
+                Debug.LogWarning("Önce gelecekte import edilecek model wrapper'ını seçin. INCOMPLETE.");
+                return;
+            }
             if (!TryMeasureBounds(wrapper, out Bounds bounds))
-            { Debug.LogWarning("INCOMPLETE: seçili wrapper altında statik model mesh'i yok.", wrapper); return; }
+            {
+                Debug.LogWarning("INCOMPLETE: seçili wrapper altında statik model mesh'i yok.", wrapper);
+                return;
+            }
             Debug.Log($"Wrapper yerel bounds: center={bounds.center:F4}, size={bounds.size:F4}, min={bounds.min:F4}, max={bounds.max:F4}. " +
                 "Ölçüler wrapper ölçeğinden bağımsızdır; birim ölçek ayrıca doğrulanmalıdır. Bu ölçüm tek başına pivot/asset kabulü değildir.", wrapper);
         }
@@ -68,7 +77,8 @@ namespace BlockRift.Editor
             bounds = default;
             foreach (var mesh in wrapper.GetComponentsInChildren<MeshFilter>(true))
             {
-                if (!mesh.sharedMesh) continue;
+                if (!mesh.sharedMesh)
+                    continue;
                 Matrix4x4 matrix = wrapper.worldToLocalMatrix * mesh.transform.localToWorldMatrix;
                 Bounds source = mesh.sharedMesh.bounds;
                 for (int i = 0; i < 8; i++)
@@ -76,8 +86,13 @@ namespace BlockRift.Editor
                     Vector3 corner = source.center + Vector3.Scale(source.extents,
                         new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
                     Vector3 point = matrix.MultiplyPoint3x4(corner);
-                    if (!found) { bounds = new Bounds(point, Vector3.zero); found = true; }
-                    else bounds.Encapsulate(point);
+                    if (!found)
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        found = true;
+                    }
+                    else
+                        bounds.Encapsulate(point);
                 }
             }
             return found;

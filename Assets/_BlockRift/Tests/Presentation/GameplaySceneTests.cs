@@ -13,30 +13,34 @@ namespace BlockRift.Tests
         private Scene scene;
         private Transform root;
 
-        [SetUp] public void OpenFoundation()
+        [SetUp]
+        public void OpenFoundation()
         {
             // Preview sahnesi kullanıcının açık/kaydedilmemiş sahnesine dokunmaz.
             scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/BlockRift_Gameplay.unity");
             root = scene.GetRootGameObjects()[0].transform;
         }
 
-        [TearDown] public void CloseFoundation()
+        [TearDown]
+        public void CloseFoundation()
         {
-            if (scene.IsValid()) EditorSceneManager.ClosePreviewScene(scene);
+            if (scene.IsValid())
+                EditorSceneManager.ClosePreviewScene(scene);
         }
 
-        [Test] public void FoundationContainsPresentationAndApprovedModelRoots()
+        [Test]
+        public void FoundationContainsPresentationAndApprovedModelRoots()
         {
             Assert.That(root.name, Is.EqualTo("GameplayRoot"));
             // Entegrasyon öncesi boşluk şartının yerini gerçek ve tek test tahtasının varlığı alır.
-            Assert.That(root.Find("BoardRoot/PiecesRoot").childCount, Is.EqualTo(BlockRift.Core.LevelOne.Create().Pieces.Count+BlockRift.Core.LevelOne.Create().FixedCells.Count));
+            Assert.That(root.Find("BoardRoot/PiecesRoot").childCount, Is.EqualTo(BlockRift.Core.LevelOne.Create().Pieces.Count + BlockRift.Core.LevelOne.Create().FixedCells.Count));
             Assert.That(root.Find("BoardRoot/BoardVisualsRoot").childCount, Is.EqualTo(1));
             Assert.That(root.Find("BoardRoot").GetComponentsInChildren<MeshFilter>(true).Length,
-                Is.EqualTo(3+BlockRift.Core.LevelOne.Create().Pieces.Count+BlockRift.Core.LevelOne.Create().FixedCells.Count));
-            var exit=root.Find("BoardRoot/MarkersRoot/ExitVisual");
-            Assert.That(exit,Is.Not.Null,"Hedef editör sahnesinde de görünür olmalı");
-            var layout=root.Find("BoardRoot").GetComponent<BoardVisualLayout>();
-            Assert.That(exit.position,Is.EqualTo(layout.CellToWorld(BlockRift.Core.LevelOne.Create().Exit)+Vector3.up*.004f));
+                Is.EqualTo(3 + BlockRift.Core.LevelOne.Create().Pieces.Count + BlockRift.Core.LevelOne.Create().FixedCells.Count));
+            var exit = root.Find("BoardRoot/MarkersRoot/ExitVisual");
+            Assert.That(exit, Is.Not.Null, "Hedef editör sahnesinde de görünür olmalı");
+            var layout = root.Find("BoardRoot").GetComponent<BoardVisualLayout>();
+            Assert.That(exit.position, Is.EqualTo(layout.CellToWorld(BlockRift.Core.LevelOne.Create().Exit) + Vector3.up * .004f));
             var background = root.Find("Background");
             Assert.That(background, Is.Not.Null);
             Assert.That(background.GetComponent<BackgroundSpriteFitter>().enabled, Is.True);
@@ -52,12 +56,18 @@ namespace BlockRift.Tests
             Assert.That(root.Find("UIRoot/GameplayCanvas/SafeArea/BottomControls"), Is.Not.Null);
         }
 
-        [TestCase(5, 1080, 1920)] [TestCase(6, 1080, 1920)]
-        [TestCase(5, 1080, 2400)] [TestCase(6, 1080, 2400)]
-        [TestCase(5, 1080, 2520)] [TestCase(6, 1080, 2520)]
-        [TestCase(5, 1536, 2048)] [TestCase(6, 1536, 2048)]
-        [TestCase(5, 1920, 1080)] [TestCase(6, 1920, 1080)]
-        [TestCase(5, 720, 1280)] [TestCase(6, 720, 1280)]
+        [TestCase(5, 1080, 1920)]
+        [TestCase(6, 1080, 1920)]
+        [TestCase(5, 1080, 2400)]
+        [TestCase(6, 1080, 2400)]
+        [TestCase(5, 1080, 2520)]
+        [TestCase(6, 1080, 2520)]
+        [TestCase(5, 1536, 2048)]
+        [TestCase(6, 1536, 2048)]
+        [TestCase(5, 1920, 1080)]
+        [TestCase(6, 1920, 1080)]
+        [TestCase(5, 720, 1280)]
+        [TestCase(6, 720, 1280)]
         public void BoardFrameAndPieceHeightStayInsideReservedSafeViewport(int boardSize, int width, int height)
         {
             // Asimetrik çentik/home-indicator ve yan insetlerle aynı runtime kadraj yolunu sınarız.

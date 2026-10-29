@@ -9,7 +9,10 @@ namespace BlockRift.Core
     /// <summary>Bölüm verisinin BoardValidator kurallarını ihlal etmesi durumunda fırlatılır.</summary>
     public sealed class LevelValidationException : InvalidOperationException
     {
-        public BoardValidationResult ValidationResult { get; }
+        public BoardValidationResult ValidationResult
+        {
+            get;
+        }
 
         public LevelValidationException(string message, BoardValidationResult validationResult)
             : base(message)
@@ -27,26 +30,33 @@ namespace BlockRift.Core
         /// <summary>Domain dışı adaptörlerin aynı JSON ayrıştırıcısını ek alanlar için kullanmasını sağlar.</summary>
         public static Dictionary<string, object> ParseJsonObject(string json)
         {
-            if (json == null) throw new ArgumentNullException(nameof(json));
-            if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("JSON içeriği boş olamaz.", nameof(json));
+            if (json == null)
+                throw new ArgumentNullException(nameof(json));
+            if (string.IsNullOrWhiteSpace(json))
+                throw new ArgumentException("JSON içeriği boş olamaz.", nameof(json));
             return JsonParser.Parse(json) as Dictionary<string, object> ?? throw new FormatException("Kök JSON bir nesne olmalı.");
         }
 
         /// <summary>Adaptörlerin ek verilerini kaybetmeden JSON nesnesini yazar; oyun kuralı veya görsel tercih içermez.</summary>
         public static string WriteJsonObject(Dictionary<string, object> value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
             return WriteJsonValue(value);
         }
 
         private static string WriteJsonValue(object value)
         {
-            if (value == null) return "null";
-            if (value is string text) return EscapeString(text);
-            if (value is bool flag) return flag ? "true" : "false";
+            if (value == null)
+                return "null";
+            if (value is string text)
+                return EscapeString(text);
+            if (value is bool flag)
+                return flag ? "true" : "false";
             if (value is Dictionary<string, object> obj)
                 return "{" + string.Join(",", obj.Select(p => EscapeString(p.Key) + ":" + WriteJsonValue(p.Value))) + "}";
-            if (value is List<object> list) return "[" + string.Join(",", list.Select(WriteJsonValue)) + "]";
+            if (value is List<object> list)
+                return "[" + string.Join(",", list.Select(WriteJsonValue)) + "]";
             if (value is long || value is int || value is double)
                 return Convert.ToString(value, CultureInfo.InvariantCulture);
             throw new FormatException("Desteklenmeyen JSON değeri: " + value.GetType().Name);
@@ -55,7 +65,8 @@ namespace BlockRift.Core
         /// <summary>Doğrulanmış LevelDefinition nesnesini standart JSON metnine dönüştürür.</summary>
         public static string Serialize(LevelDefinition level, bool pretty = true)
         {
-            if (level == null) throw new ArgumentNullException(nameof(level));
+            if (level == null)
+                throw new ArgumentNullException(nameof(level));
 
             var sb = new StringBuilder();
             string indent = pretty ? "  " : "";
@@ -86,7 +97,8 @@ namespace BlockRift.Core
                 sb.Append("\"height\":").Append(sp).Append(p.Height).Append(",").Append(sp);
                 sb.Append("\"start\":").Append(sp).Append("{\"x\":").Append(sp).Append(p.Start.X).Append(",").Append(sp).Append("\"y\":").Append(sp).Append(p.Start.Y).Append("}");
                 sb.Append(sp).Append("}");
-                if (i < level.Pieces.Count - 1) sb.Append(",");
+                if (i < level.Pieces.Count - 1)
+                    sb.Append(",");
                 sb.Append(nl);
             }
             sb.Append(indent).Append("],").Append(nl);
@@ -100,7 +112,8 @@ namespace BlockRift.Core
                 {
                     var c = level.FixedCells[i];
                     sb.Append(indent).Append(indent).Append("{\"x\":").Append(sp).Append(c.X).Append(",").Append(sp).Append("\"y\":").Append(sp).Append(c.Y).Append("}");
-                    if (i < level.FixedCells.Count - 1) sb.Append(",");
+                    if (i < level.FixedCells.Count - 1)
+                        sb.Append(",");
                     sb.Append(nl);
                 }
                 sb.Append(indent);
@@ -116,7 +129,8 @@ namespace BlockRift.Core
                 {
                     var t = level.Triggers[i];
                     sb.Append(indent).Append(indent).Append("{\"x\":").Append(sp).Append(t.X).Append(",").Append(sp).Append("\"y\":").Append(sp).Append(t.Y).Append("}");
-                    if (i < level.Triggers.Count - 1) sb.Append(",");
+                    if (i < level.Triggers.Count - 1)
+                        sb.Append(",");
                     sb.Append(nl);
                 }
                 sb.Append(indent);
@@ -134,7 +148,8 @@ namespace BlockRift.Core
 
             string id = RequireString(root, "id");
             int schemaVersion = RequireInt(root, "schemaVersion");
-            if (schemaVersion != 1) throw new FormatException("Desteklenmeyen schemaVersion: " + schemaVersion + ". Desteklenen sürüm: 1.");
+            if (schemaVersion != 1)
+                throw new FormatException("Desteklenmeyen schemaVersion: " + schemaVersion + ". Desteklenen sürüm: 1.");
             int rulesVersion = RequireInt(root, "rulesVersion");
             int width = RequireInt(root, "width");
             int height = RequireInt(root, "height");
@@ -219,9 +234,12 @@ namespace BlockRift.Core
                 throw new FormatException($"Eksik alan '{key}'{(context != null ? " (" + context + ")" : "")}.");
 
             // Şema, boyut ve koordinatların hiçbirinde daraltma veya yuvarlama yapılmaz.
-            if (val is long l && l >= int.MinValue && l <= int.MaxValue) return (int)l;
-            if (val is int i) return i;
-            if (val is double d && d >= int.MinValue && d <= int.MaxValue && d == Math.Truncate(d)) return (int)d;
+            if (val is long l && l >= int.MinValue && l <= int.MaxValue)
+                return (int)l;
+            if (val is int i)
+                return i;
+            if (val is double d && d >= int.MinValue && d <= int.MaxValue && d == Math.Truncate(d))
+                return (int)d;
 
             throw new FormatException($"'{key}' bir tamsayı olmalıdır{(context != null ? " (" + context + ")" : "")}.");
         }
@@ -242,23 +260,40 @@ namespace BlockRift.Core
 
         private static string EscapeString(string s)
         {
-            if (string.IsNullOrEmpty(s)) return "\"\"";
+            if (string.IsNullOrEmpty(s))
+                return "\"\"";
             var sb = new StringBuilder();
             sb.Append('"');
             foreach (char c in s)
             {
                 switch (c)
                 {
-                    case '\\': sb.Append("\\\\"); break;
-                    case '"': sb.Append("\\\""); break;
-                    case '\b': sb.Append("\\b"); break;
-                    case '\f': sb.Append("\\f"); break;
-                    case '\n': sb.Append("\\n"); break;
-                    case '\r': sb.Append("\\r"); break;
-                    case '\t': sb.Append("\\t"); break;
+                    case '\\':
+                        sb.Append("\\\\");
+                        break;
+                    case '"':
+                        sb.Append("\\\"");
+                        break;
+                    case '\b':
+                        sb.Append("\\b");
+                        break;
+                    case '\f':
+                        sb.Append("\\f");
+                        break;
+                    case '\n':
+                        sb.Append("\\n");
+                        break;
+                    case '\r':
+                        sb.Append("\\r");
+                        break;
+                    case '\t':
+                        sb.Append("\\t");
+                        break;
                     default:
-                        if (c < ' ') sb.AppendFormat("\\u{0:x4}", (int)c);
-                        else sb.Append(c);
+                        if (c < ' ')
+                            sb.AppendFormat("\\u{0:x4}", (int)c);
+                        else
+                            sb.Append(c);
                         break;
                 }
             }
@@ -286,15 +321,22 @@ namespace BlockRift.Core
             private static object ParseValue(string json, ref int index)
             {
                 SkipWhitespace(json, ref index);
-                if (index >= json.Length) throw new FormatException("Beklenmeyen JSON sonu.");
+                if (index >= json.Length)
+                    throw new FormatException("Beklenmeyen JSON sonu.");
 
                 char c = json[index];
-                if (c == '{') return ParseObject(json, ref index);
-                if (c == '[') return ParseArray(json, ref index);
-                if (c == '"') return ParseString(json, ref index);
-                if (c == 't' || c == 'f') return ParseBool(json, ref index);
-                if (c == 'n') return ParseNull(json, ref index);
-                if (c == '-' || char.IsDigit(c)) return ParseNumber(json, ref index);
+                if (c == '{')
+                    return ParseObject(json, ref index);
+                if (c == '[')
+                    return ParseArray(json, ref index);
+                if (c == '"')
+                    return ParseString(json, ref index);
+                if (c == 't' || c == 'f')
+                    return ParseBool(json, ref index);
+                if (c == 'n')
+                    return ParseNull(json, ref index);
+                if (c == '-' || char.IsDigit(c))
+                    return ParseNumber(json, ref index);
 
                 throw new FormatException($"JSON ayrıştırma hatası: geçersiz karakter '{c}' konum {index}.");
             }
@@ -307,7 +349,8 @@ namespace BlockRift.Core
                 while (true)
                 {
                     SkipWhitespace(json, ref index);
-                    if (index >= json.Length) throw new FormatException("Kapatılmamış JSON nesnesi ('}').");
+                    if (index >= json.Length)
+                        throw new FormatException("Kapatılmamış JSON nesnesi ('}').");
 
                     if (json[index] == '}')
                     {
@@ -329,7 +372,8 @@ namespace BlockRift.Core
                     dict[key] = value;
 
                     SkipWhitespace(json, ref index);
-                    if (index >= json.Length) throw new FormatException("Kapatılmamış JSON nesnesi ('}').");
+                    if (index >= json.Length)
+                        throw new FormatException("Kapatılmamış JSON nesnesi ('}').");
 
                     if (json[index] == ',')
                     {
@@ -355,7 +399,8 @@ namespace BlockRift.Core
                 while (true)
                 {
                     SkipWhitespace(json, ref index);
-                    if (index >= json.Length) throw new FormatException("Kapatılmamış JSON dizisi (']').");
+                    if (index >= json.Length)
+                        throw new FormatException("Kapatılmamış JSON dizisi (']').");
 
                     if (json[index] == ']')
                     {
@@ -367,7 +412,8 @@ namespace BlockRift.Core
                     list.Add(value);
 
                     SkipWhitespace(json, ref index);
-                    if (index >= json.Length) throw new FormatException("Kapatılmamış JSON dizisi (']').");
+                    if (index >= json.Length)
+                        throw new FormatException("Kapatılmamış JSON dizisi (']').");
 
                     if (json[index] == ',')
                     {
@@ -393,24 +439,43 @@ namespace BlockRift.Core
                 while (index < json.Length)
                 {
                     char c = json[index++];
-                    if (c == '"') return sb.ToString();
+                    if (c == '"')
+                        return sb.ToString();
 
                     if (c == '\\')
                     {
-                        if (index >= json.Length) throw new FormatException("Beklenmeyen kaçış sonu.");
+                        if (index >= json.Length)
+                            throw new FormatException("Beklenmeyen kaçış sonu.");
                         char esc = json[index++];
                         switch (esc)
                         {
-                            case '"': sb.Append('"'); break;
-                            case '\\': sb.Append('\\'); break;
-                            case '/': sb.Append('/'); break;
-                            case 'b': sb.Append('\b'); break;
-                            case 'f': sb.Append('\f'); break;
-                            case 'n': sb.Append('\n'); break;
-                            case 'r': sb.Append('\r'); break;
-                            case 't': sb.Append('\t'); break;
+                            case '"':
+                                sb.Append('"');
+                                break;
+                            case '\\':
+                                sb.Append('\\');
+                                break;
+                            case '/':
+                                sb.Append('/');
+                                break;
+                            case 'b':
+                                sb.Append('\b');
+                                break;
+                            case 'f':
+                                sb.Append('\f');
+                                break;
+                            case 'n':
+                                sb.Append('\n');
+                                break;
+                            case 'r':
+                                sb.Append('\r');
+                                break;
+                            case 't':
+                                sb.Append('\t');
+                                break;
                             case 'u':
-                                if (index + 4 > json.Length) throw new FormatException("Eksik unicode kaçış dizisi.");
+                                if (index + 4 > json.Length)
+                                    throw new FormatException("Eksik unicode kaçış dizisi.");
                                 string hex = json.Substring(index, 4);
                                 index += 4;
                                 sb.Append((char)int.Parse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture));
@@ -431,23 +496,28 @@ namespace BlockRift.Core
             private static object ParseNumber(string json, ref int index)
             {
                 int start = index;
-                if (json[index] == '-') index++;
-                while (index < json.Length && char.IsDigit(json[index])) index++;
+                if (json[index] == '-')
+                    index++;
+                while (index < json.Length && char.IsDigit(json[index]))
+                    index++;
 
                 bool isFloating = false;
                 if (index < json.Length && json[index] == '.')
                 {
                     isFloating = true;
                     index++;
-                    while (index < json.Length && char.IsDigit(json[index])) index++;
+                    while (index < json.Length && char.IsDigit(json[index]))
+                        index++;
                 }
 
                 if (index < json.Length && (json[index] == 'e' || json[index] == 'E'))
                 {
                     isFloating = true;
                     index++;
-                    if (index < json.Length && (json[index] == '+' || json[index] == '-')) index++;
-                    while (index < json.Length && char.IsDigit(json[index])) index++;
+                    if (index < json.Length && (json[index] == '+' || json[index] == '-'))
+                        index++;
+                    while (index < json.Length && char.IsDigit(json[index]))
+                        index++;
                 }
 
                 string numStr = json.Substring(start, index - start);

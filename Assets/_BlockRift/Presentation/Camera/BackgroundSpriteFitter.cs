@@ -47,10 +47,10 @@ namespace BlockRift.Presentation
 
             float textureAspect = (float)backgroundTexture.width / backgroundTexture.height;
             // Görüntü penceresi kaydırıldığında da aynı arka plan görseli tam ekran konumunu korur.
-            float viewHeight = Vector3.Distance(targetCamera.ViewportToWorldPoint(new Vector3(.5f,0,depth)),
-                targetCamera.ViewportToWorldPoint(new Vector3(.5f,1,depth)));
-            float viewWidth = Vector3.Distance(targetCamera.ViewportToWorldPoint(new Vector3(0,.5f,depth)),
-                targetCamera.ViewportToWorldPoint(new Vector3(1,.5f,depth)));
+            float viewHeight = Vector3.Distance(targetCamera.ViewportToWorldPoint(new Vector3(.5f, 0, depth)),
+                targetCamera.ViewportToWorldPoint(new Vector3(.5f, 1, depth)));
+            float viewWidth = Vector3.Distance(targetCamera.ViewportToWorldPoint(new Vector3(0, .5f, depth)),
+                targetCamera.ViewportToWorldPoint(new Vector3(1, .5f, depth)));
             // Küçük overscan, perspective matris hassasiyeti/texture filtrelemesinin kenarda çizgi açmasını önler.
             float height = Mathf.Max(viewHeight, viewWidth / textureAspect) * 1.002f;
             transform.localScale = new Vector3(height * textureAspect, height, 1f);

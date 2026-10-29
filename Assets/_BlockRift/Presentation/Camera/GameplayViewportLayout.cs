@@ -47,14 +47,23 @@ namespace BlockRift.Presentation
                     cachedFocusRoot = focusRoot;
                     focusRenderers = focusRoot ? focusRoot.GetComponentsInChildren<Renderer>(true) : null;
                 }
-                bool found = false; Bounds combined = default;
+                bool found = false;
+                Bounds combined = default;
                 if (focusRenderers != null)
-                foreach (var renderer in focusRenderers)
-                {
-                    if (!renderer) continue;
-                    if (!found) { combined = renderer.bounds; found = true; } else combined.Encapsulate(renderer.bounds);
-                }
-                if (found) return combined.center;
+                    foreach (var renderer in focusRenderers)
+                    {
+                        if (!renderer)
+                            continue;
+                        if (!found)
+                        {
+                            combined = renderer.bounds;
+                            found = true;
+                        }
+                        else
+                            combined.Encapsulate(renderer.bounds);
+                    }
+                if (found)
+                    return combined.center;
                 return boardRoot ? boardRoot.position : transform.position;
             }
         }
@@ -66,11 +75,15 @@ namespace BlockRift.Presentation
         /// <summary>Piksel cinsinden ekran/güvenli alanla düzenler; editör doğrulaması da aynı yolu kullanır.</summary>
         public void ApplyLayout(int width, int height, Rect safeArea)
         {
-            if (!boardCamera || !boardRoot || !safeAreaRoot || !boardViewport || width <= 0 || height <= 0) return;
+            if (!boardCamera || !boardRoot || !safeAreaRoot || !boardViewport || width <= 0 || height <= 0)
+                return;
             safeArea = Rect.MinMaxRect(Mathf.Clamp(safeArea.xMin, 0, width), Mathf.Clamp(safeArea.yMin, 0, height),
                 Mathf.Clamp(safeArea.xMax, 0, width), Mathf.Clamp(safeArea.yMax, 0, height));
-            if (safeArea.width <= 0 || safeArea.height <= 0) return;
-            lastWidth = width; lastHeight = height; lastSafeArea = safeArea;
+            if (safeArea.width <= 0 || safeArea.height <= 0)
+                return;
+            lastWidth = width;
+            lastHeight = height;
+            lastSafeArea = safeArea;
             safeAreaRoot.anchorMin = new Vector2(safeArea.xMin / width, safeArea.yMin / height);
             safeAreaRoot.anchorMax = new Vector2(safeArea.xMax / width, safeArea.yMax / height);
             safeAreaRoot.offsetMin = safeAreaRoot.offsetMax = Vector2.zero;
@@ -78,7 +91,8 @@ namespace BlockRift.Presentation
             // BoardViewport doğrudan SafeArea çocuğudur; ofsetsiz anchor alanını kameraya eşleriz.
             Vector2 min = safeAreaRoot.anchorMin + Vector2.Scale(boardViewport.anchorMin, safeAreaRoot.anchorMax - safeAreaRoot.anchorMin);
             Vector2 max = safeAreaRoot.anchorMin + Vector2.Scale(boardViewport.anchorMax, safeAreaRoot.anchorMax - safeAreaRoot.anchorMin);
-            if (max.x <= min.x || max.y <= min.y) return;
+            if (max.x <= min.x || max.y <= min.y)
+                return;
             boardCamera.orthographic = !usePerspective;
             boardCamera.ResetProjectionMatrix();
             boardCamera.rect = new Rect(0, 0, 1, 1);
@@ -121,7 +135,8 @@ namespace BlockRift.Presentation
             Transform cameraTransform = boardCamera.transform;
             Vector3 target = FocusPoint;
             // Kamera daima pozitif Y tarafından bakar; hedef için parça/tahta Transform'u değiştirilmez.
-            if (cameraTransform.forward.y >= -0.001f) cameraTransform.rotation = Quaternion.Euler(78, 0, 0);
+            if (cameraTransform.forward.y >= -0.001f)
+                cameraTransform.rotation = Quaternion.Euler(78, 0, 0);
             float distance = boardCamera.nearClipPlane;
             // Her köşenin perspective bölmesindeki kendi derinliği kullanılır. Tek bir orthographic zarf yetmez.
             for (int i = 0; i < 8; i++)
@@ -143,13 +158,15 @@ namespace BlockRift.Presentation
             // Off-axis görüntü penceresi, hedefe bakan kamera eksenini bozmadan UI için kadrajı taşır.
             Matrix4x4 projection = Matrix4x4.Perspective(boardCamera.fieldOfView, boardCamera.aspect,
                 boardCamera.nearClipPlane, boardCamera.farClipPlane);
-            projection.m02 = -cx; projection.m12 = -cy;
+            projection.m02 = -cx;
+            projection.m12 = -cy;
             boardCamera.projectionMatrix = projection;
         }
 
         private void OnDrawGizmosSelected()
         {
-            if (!boardRoot) return;
+            if (!boardRoot)
+                return;
             Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.7f);
             Gizmos.matrix = boardRoot.localToWorldMatrix;
             Bounds bounds = visualLayout && visualLayout.TryGetPresentationBounds(out Bounds provided) ? provided : localPresentationBounds;

@@ -24,16 +24,18 @@ namespace BlockRift.Tests
             public LevelDefinition GetLevel(string id)
             {
                 Requested = id;
-                if (!Content.TryGetValue(id, out var json)) throw new FileNotFoundException(id);
+                if (!Content.TryGetValue(id, out var json))
+                    throw new FileNotFoundException(id);
                 return LevelJsonSerializer.Deserialize(json);
             }
         }
 
-        [SetUp] public void Create()
+        [SetUp]
+        public void Create()
         {
             host = new GameObject("GeneralControllerTest");
             game = host.AddComponent<LevelOneGameplay>();
-            TestProgressStore.OpenFixtures(game,"fixture-alpha","fixture-beta","missing","broken");
+            TestProgressStore.OpenFixtures(game, "fixture-alpha", "fixture-beta", "missing", "broken");
             provider = new JsonProvider();
             provider.Content["fixture-alpha"] = LevelJsonSerializer.Serialize(Fixture());
             provider.Content["fixture-beta"] = LevelJsonSerializer.Serialize(new LevelDefinition("fixture-beta", 1, MovementEngine.RulesVersion, 5, 5,
@@ -51,7 +53,8 @@ namespace BlockRift.Tests
 
         private void Load(string id) => game.LoadLevel(id);
 
-        [Test] public void RequestedIdAndArbitraryPiecesComeFromJson()
+        [Test]
+        public void RequestedIdAndArbitraryPiecesComeFromJson()
         {
             Load("fixture-alpha");
             Assert.That(provider.Requested, Is.EqualTo("fixture-alpha"));
@@ -63,7 +66,8 @@ namespace BlockRift.Tests
                 Assert.That(MovementEngine.Position(game.Session.State, piece.Id), Is.EqualTo(piece.Start));
         }
 
-        [Test] public void CoreMovementRestrictionsCollisionBoundaryAndNoOpArePreserved()
+        [Test]
+        public void CoreMovementRestrictionsCollisionBoundaryAndNoOpArePreserved()
         {
             Load("fixture-alpha");
             Assert.That(game.Session.Commit(new MoveCommand("bridge", MoveAxis.Vertical, 1)).Changed, Is.False);
@@ -77,7 +81,8 @@ namespace BlockRift.Tests
             Assert.That(game.Session.MoveCount, Is.EqualTo(3));
         }
 
-        [Test] public void ActiveExitWinsAndRestartRestoresExactInitialState()
+        [Test]
+        public void ActiveExitWinsAndRestartRestoresExactInitialState()
         {
             Load("fixture-alpha");
             var initial = BoardSolver.Key(game.Session.State);
@@ -90,7 +95,8 @@ namespace BlockRift.Tests
             Assert.That(BoardSolver.Key(game.Session.State), Is.EqualTo(initial));
         }
 
-        [Test] public void ReloadChangesPieceCountAndRestartUsesNewLevel()
+        [Test]
+        public void ReloadChangesPieceCountAndRestartUsesNewLevel()
         {
             Load("fixture-alpha");
             game.Session.Commit(new MoveCommand("hero", MoveAxis.Horizontal, 4));
@@ -104,7 +110,9 @@ namespace BlockRift.Tests
             Assert.That(MovementEngine.Position(game.Session.State, "comet"), Is.EqualTo(new Cell(0, 0)));
         }
 
-        [TestCase(null)] [TestCase("")] [TestCase(" ")]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
         public void EmptyIdIsRejectedBeforeProvider(string id)
         {
             Assert.Throws<ArgumentException>(() => Load(id));
@@ -112,7 +120,8 @@ namespace BlockRift.Tests
             Assert.That(game.Session, Is.Null);
         }
 
-        [Test] public void MissingOrInvalidJsonIsExplicitAndLeavesActiveSessionIntact()
+        [Test]
+        public void MissingOrInvalidJsonIsExplicitAndLeavesActiveSessionIntact()
         {
             Load("fixture-alpha");
             var active = game.Session;
@@ -123,7 +132,8 @@ namespace BlockRift.Tests
             Assert.That(game.LevelId, Is.EqualTo("fixture-alpha"));
         }
 
-        [Test] public void SceneConfiguresOneControllerAndInitialJsonId()
+        [Test]
+        public void SceneConfiguresOneControllerAndInitialJsonId()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/BlockRift_Gameplay.unity");
             try

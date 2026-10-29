@@ -14,18 +14,27 @@ namespace BlockRift.Editor
         /// <summary>Gerçek mesh köşelerini wrapper yerel uzayında ölçer; imported rotation/scale'i hesaba katar.</summary>
         public static Bounds MeasureBounds(Transform wrapper)
         {
-            bool found = false; Bounds bounds = default;
+            bool found = false;
+            Bounds bounds = default;
             foreach (var filter in wrapper.GetComponentsInChildren<MeshFilter>(true))
             {
-                if (!filter.sharedMesh) throw new InvalidOperationException("Eksik mesh.");
+                if (!filter.sharedMesh)
+                    throw new InvalidOperationException("Eksik mesh.");
                 Matrix4x4 matrix = wrapper.worldToLocalMatrix * filter.transform.localToWorldMatrix;
                 foreach (Vector3 vertex in filter.sharedMesh.vertices)
                 {
                     Vector3 point = matrix.MultiplyPoint3x4(vertex);
-                    if (!found) { bounds = new Bounds(point, Vector3.zero); found = true; } else bounds.Encapsulate(point);
+                    if (!found)
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        found = true;
+                    }
+                    else
+                        bounds.Encapsulate(point);
                 }
             }
-            if (!found) throw new InvalidOperationException("Gerçek mesh bulunamadı.");
+            if (!found)
+                throw new InvalidOperationException("Gerçek mesh bulunamadı.");
             return bounds;
         }
     }

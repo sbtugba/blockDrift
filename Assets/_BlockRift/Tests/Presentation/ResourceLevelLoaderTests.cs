@@ -25,7 +25,8 @@ namespace BlockRift.Tests
             finally
             {
                 File.Delete(path);
-                if (File.Exists(path + ".meta")) File.Delete(path + ".meta");
+                if (File.Exists(path + ".meta"))
+                    File.Delete(path + ".meta");
             }
         }
 

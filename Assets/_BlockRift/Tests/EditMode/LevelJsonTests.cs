@@ -9,7 +9,10 @@ namespace BlockRift.Tests
     /// <summary>Veri odaklı bölüm serileştirme, yükleme, şema ve invariant doğrulama testleridir.</summary>
     public sealed class LevelJsonTests
     {
-        [TestCase(0)] [TestCase(-1)] [TestCase(2)] [TestCase(99)]
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(2)]
+        [TestCase(99)]
         public void UnsupportedSchemaIsRejectedExplicitly(int version)
         {
             string json = LevelJsonSerializer.Serialize(LevelOne.Create()).Replace("\"schemaVersion\": 1", "\"schemaVersion\": " + version);
@@ -60,7 +63,8 @@ namespace BlockRift.Tests
             Assert.That(proof.Path.Count, Is.EqualTo(8));
 
             var state = BoardState.CreateInitial(loaded);
-            foreach (var move in proof.Path) state = MovementEngine.Apply(loaded, state, move).State;
+            foreach (var move in proof.Path)
+                state = MovementEngine.Apply(loaded, state, move).State;
             Assert.That(MovementEngine.IsWon(loaded, state), Is.True);
         }
 

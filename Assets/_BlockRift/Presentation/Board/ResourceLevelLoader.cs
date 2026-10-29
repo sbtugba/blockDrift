@@ -14,7 +14,7 @@ namespace BlockRift.Presentation
         public const string LevelsResourceFolder = "Levels/";
         private LevelVisualData loaded;
         /// <summary>Yayın sırasını ayrı sürümlü veri dosyasından okur; bölüm ID'si türetmez.</summary>
-        public static string LoadPublishedManifest() => ReadResourceText(LevelsResourceFolder+"level-catalog");
+        public static string LoadPublishedManifest() => ReadResourceText(LevelsResourceFolder + "level-catalog");
 
         /// <summary>Resources/Levels altından ID ile JSON okur ve LevelJsonSerializer ile doğrular.</summary>
         public static LevelDefinition LoadLevel(string levelId) => LoadDocument(levelId).Definition;
@@ -48,7 +48,8 @@ namespace BlockRift.Presentation
         /// <summary>Aynı yüklemenin görsel görünümünü döndürür; ayrı dosya veya ikinci veri kaynağı yoktur.</summary>
         public LevelVisualData GetVisualData(string levelId)
         {
-            if (loaded == null || loaded.Definition.Id != levelId) loaded = LoadDocument(levelId);
+            if (loaded == null || loaded.Definition.Id != levelId)
+                loaded = LoadDocument(levelId);
             return loaded;
         }
     }

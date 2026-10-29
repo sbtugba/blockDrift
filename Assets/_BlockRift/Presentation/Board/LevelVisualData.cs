@@ -9,8 +9,14 @@ namespace BlockRift.Presentation
     /// <summary>Görsel meta verisi domain tanımına eklenmez; aynı JSON'un sunum tarafındaki değişmez görünümüdür.</summary>
     public sealed class LevelVisualData
     {
-        public LevelDefinition Definition { get; }
-        public IReadOnlyDictionary<string, string> VisualKeys { get; }
+        public LevelDefinition Definition
+        {
+            get;
+        }
+        public IReadOnlyDictionary<string, string> VisualKeys
+        {
+            get;
+        }
 
         public LevelVisualData(LevelDefinition definition, IReadOnlyDictionary<string, string> keys)
         {
@@ -38,8 +44,10 @@ namespace BlockRift.Presentation
             foreach (var item in (List<object>)root["pieces"])
             {
                 var piece = (Dictionary<string, object>)item;
-                if (!piece.TryGetValue("visualKey", out var value)) continue;
-                if (!(value is string key) || string.IsNullOrWhiteSpace(key)) throw new FormatException("visualKey boş olmayan metin olmalı.");
+                if (!piece.TryGetValue("visualKey", out var value))
+                    continue;
+                if (!(value is string key) || string.IsNullOrWhiteSpace(key))
+                    throw new FormatException("visualKey boş olmayan metin olmalı.");
                 keys.Add((string)piece["id"], key);
             }
             return new LevelVisualData(definition, keys);
@@ -52,7 +60,8 @@ namespace BlockRift.Presentation
             foreach (var item in (List<object>)root["pieces"])
             {
                 var piece = (Dictionary<string, object>)item;
-                if (VisualKeys.TryGetValue((string)piece["id"], out var key)) piece["visualKey"] = key;
+                if (VisualKeys.TryGetValue((string)piece["id"], out var key))
+                    piece["visualKey"] = key;
             }
             return LevelJsonSerializer.WriteJsonObject(root);
         }

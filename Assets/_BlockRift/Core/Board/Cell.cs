@@ -15,13 +15,23 @@ namespace BlockRift.Core
     {
         // int tam sayıdır. Property (özellik), nesnenin sunduğu veriye erişim noktasıdır.
         // { get; } değeri okumaya izin verir; dışarıdan cell.X = 3 şeklinde değiştirmeye izin vermez.
-        public int X { get; }
-        public int Y { get; }
+        public int X
+        {
+            get;
+        }
+        public int Y
+        {
+            get;
+        }
 
         /// <summary>Görsel dünya koordinatlarından bağımsız bir hücre oluşturur.</summary>
         // Constructor (kurucu), türle aynı adı taşır ve new Cell(2, 3) çağrısında çalışır.
         // Küçük harfli x/y gelen parametreler, büyük harfli X/Y saklanan özelliklerdir.
-        public Cell(int x, int y) { X = x; Y = y; }
+        public Cell(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
         // bool yalnız true/false değeridir. => tek ifadeli metot gövdesidir; burada sonucu döndürür.
         // == eşitlik, && ise "iki koşul da doğru olmalı" anlamındadır.
         public bool Equals(Cell other) => X == other.X && Y == other.Y;

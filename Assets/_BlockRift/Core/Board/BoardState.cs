@@ -9,10 +9,20 @@ namespace BlockRift.Core
     // Bağlantı: PieceId, PieceDefinition.Id ile eşleşir; Origin ise o parçanın güncel sol alt hücresidir.
     public readonly struct PiecePosition
     {
-        public string PieceId { get; }
-        public Cell Origin { get; }
+        public string PieceId
+        {
+            get;
+        }
+        public Cell Origin
+        {
+            get;
+        }
         /// <summary>Aynı şekilli parçalar arasında kimlik kaybı olmadan konum saklar.</summary>
-        public PiecePosition(string pieceId, Cell origin) { PieceId = pieceId; Origin = origin; }
+        public PiecePosition(string pieceId, Cell origin)
+        {
+            PieceId = pieceId;
+            Origin = origin;
+        }
     }
 
     /// <summary>Yalnız tahta snapshot'ıdır; coin, yardım envanteri ve Undo geçmişini içermez.</summary>
@@ -21,10 +31,16 @@ namespace BlockRift.Core
     // MovementEngine yeni snapshot üretir; GameSession bunu sahiplenir. Undo henüz uygulanmadı.
     public sealed class BoardState
     {
-        public IReadOnlyList<PiecePosition> Positions { get; }
+        public IReadOnlyList<PiecePosition> Positions
+        {
+            get;
+        }
         // bool tüketim bayrağıdır: false kullanılmamış, true tüketilmiş.
         // ConsumedTriggers[i], LevelDefinition.Triggers[i] hücresine aittir; indeks 0'dan başlar.
-        public IReadOnlyList<bool> ConsumedTriggers { get; }
+        public IReadOnlyList<bool> ConsumedTriggers
+        {
+            get;
+        }
 
         /// <summary>Snapshot listelerinin sahipliğini almaz, bağımsız kopyalarını saklar.</summary>
         // Kaynak listeler daha sonra değişse bile bu snapshot değişmez.

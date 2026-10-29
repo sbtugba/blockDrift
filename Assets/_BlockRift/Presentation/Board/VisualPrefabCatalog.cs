@@ -24,7 +24,8 @@ namespace BlockRift.Presentation
         }
 
         [SerializeField] private Entry[] entries = Array.Empty<Entry>();
-        [Serializable] public sealed class ColorBinding
+        [Serializable]
+        public sealed class ColorBinding
         {
             public string key;
             public Material material;
@@ -37,7 +38,8 @@ namespace BlockRift.Presentation
         /// <summary>Parça ID'sini kullanmadan onaylı tür ve boyutu mevcut asset kimliğine çözer.</summary>
         public Entry ResolvePiece(PieceDefinition piece)
         {
-            if (piece == null) throw new ArgumentNullException(nameof(piece));
+            if (piece == null)
+                throw new ArgumentNullException(nameof(piece));
             if (!ShapeCatalog.IsAllowed(piece.Width, piece.Height) ||
                 (piece.Kind == PieceKind.Target && (piece.Width != 1 || piece.Height != 1)) ||
                 (piece.Kind != PieceKind.Target && piece.Kind != PieceKind.Obstacle))
@@ -54,7 +56,8 @@ namespace BlockRift.Presentation
             foreach (var entry in entries)
                 if (entry != null && !entry.IsBoard && entry.AssetId == id)
                 {
-                    if (found != null) throw new InvalidOperationException("Çift prefab eşlemesi: " + id);
+                    if (found != null)
+                        throw new InvalidOperationException("Çift prefab eşlemesi: " + id);
                     found = entry;
                 }
             if (found == null || !found.Prefab || found.Width != width || found.Height != height)
@@ -70,10 +73,12 @@ namespace BlockRift.Presentation
                 foreach (var binding in colors)
                     if (binding != null && binding.key == key)
                     {
-                        if (found || !binding.material) throw new InvalidOperationException("Çift/boş renk eşlemesi: " + key);
+                        if (found || !binding.material)
+                            throw new InvalidOperationException("Çift/boş renk eşlemesi: " + key);
                         found = binding.material;
                     }
-            if (!found) throw new InvalidOperationException("Eksik veya bilinmeyen visualKey: '" + key + "'. JSON'a açık renk anahtarı ekleyin.");
+            if (!found)
+                throw new InvalidOperationException("Eksik veya bilinmeyen visualKey: '" + key + "'. JSON'a açık renk anahtarı ekleyin.");
             return found;
         }
 
@@ -86,8 +91,12 @@ namespace BlockRift.Presentation
         {
             foreach (var candidate in entries)
                 if (!candidate.IsBoard && candidate.AssetId == assetId && candidate.Prefab)
-                { entry = candidate; return true; }
-            entry = null; return false;
+                {
+                    entry = candidate;
+                    return true;
+                }
+            entry = null;
+            return false;
         }
 
         /// <summary>İstenen boyutun gerçek tahta prefab'ını döndürür; 6×6'yı 5×5'e ölçeklemez.</summary>
@@ -95,8 +104,12 @@ namespace BlockRift.Presentation
         {
             foreach (var candidate in entries)
                 if (candidate.IsBoard && candidate.Width == size && candidate.Height == size && candidate.Prefab)
-                { entry = candidate; return true; }
-            entry = null; return false;
+                {
+                    entry = candidate;
+                    return true;
+                }
+            entry = null;
+            return false;
         }
     }
 }

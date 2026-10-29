@@ -35,7 +35,7 @@ namespace BlockRift.Tests
             try
             {
                 var gameplay = go.AddComponent<LevelOneGameplay>();
-                TestProgressStore.OpenFixtures(gameplay,"level-001","custom-runtime-5x5","missing","invalid");
+                TestProgressStore.OpenFixtures(gameplay, "level-001", "custom-runtime-5x5", "missing", "invalid");
                 Assert.That(string.IsNullOrEmpty(gameplay.LevelId), Is.True, "ID sahne veya çağıran tarafından sağlanmalı");
 
                 // InitializeLevel çağrıldığında ResourceLevelLoader üzerinden JSON yüklenir
@@ -62,7 +62,7 @@ namespace BlockRift.Tests
             try
             {
                 var gameplay = go.AddComponent<LevelOneGameplay>();
-                TestProgressStore.OpenFixtures(gameplay,"level-001","custom-runtime-5x5","missing","invalid");
+                TestProgressStore.OpenFixtures(gameplay, "level-001", "custom-runtime-5x5", "missing", "invalid");
 
                 // Farklı bir test bölümü üretiyoruz (LevelOne'dan tamamen farklı 5x5)
                 var customLevel = new LevelDefinition("custom-runtime-5x5", 1, MovementEngine.RulesVersion, 5, 5,
@@ -91,7 +91,7 @@ namespace BlockRift.Tests
             try
             {
                 var gameplay = go.AddComponent<LevelOneGameplay>();
-                TestProgressStore.OpenFixtures(gameplay,"level-001","custom-runtime-5x5","missing","invalid");
+                TestProgressStore.OpenFixtures(gameplay, "level-001", "custom-runtime-5x5", "missing", "invalid");
                 gameplay.SetLevelProvider(new ThrowingProvider(new FileNotFoundException("level-99999.json bulunamadı")));
 
                 // JSON bulunamadığında LevelOne.Create'e sessiz dönüş yapılmamalı, hata fırlatılmalıdır
@@ -111,7 +111,7 @@ namespace BlockRift.Tests
             try
             {
                 var gameplay = go.AddComponent<LevelOneGameplay>();
-                TestProgressStore.OpenFixtures(gameplay,"level-001","custom-runtime-5x5","missing","invalid");
+                TestProgressStore.OpenFixtures(gameplay, "level-001", "custom-runtime-5x5", "missing", "invalid");
                 var validationResult = BoardValidator.Validate(null);
                 gameplay.SetLevelProvider(new ThrowingProvider(new LevelValidationException("Geçersiz veri", validationResult)));
 
@@ -131,7 +131,7 @@ namespace BlockRift.Tests
             try
             {
                 var gameplay = go.AddComponent<LevelOneGameplay>();
-                TestProgressStore.OpenFixtures(gameplay,"level-001","custom-runtime-5x5","missing","invalid");
+                TestProgressStore.OpenFixtures(gameplay, "level-001", "custom-runtime-5x5", "missing", "invalid");
                 gameplay.LoadLevel("level-001");
 
                 // Başlangıç durumu
@@ -162,7 +162,7 @@ namespace BlockRift.Tests
             try
             {
                 var gameplay = go.AddComponent<LevelOneGameplay>();
-                TestProgressStore.OpenFixtures(gameplay,"level-001","custom-runtime-5x5","missing","invalid");
+                TestProgressStore.OpenFixtures(gameplay, "level-001", "custom-runtime-5x5", "missing", "invalid");
                 gameplay.LoadLevel("level-001");
 
                 var proof = BoardSolver.Solve(gameplay.Session.Level, gameplay.Session.State);
